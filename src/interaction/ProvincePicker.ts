@@ -19,11 +19,25 @@ export class ProvincePicker {
   private provinceCtx: CanvasRenderingContext2D;
   private provinceMapWidth: number;
   private provinceMapHeight: number;
+  private provincePixels!: Uint8ClampedArray;
 
   /** 用于读取 State LUT 像素的 Canvas 上下文 */
   private stateCtx: CanvasRenderingContext2D | null = null;
+  private stateMapWidth = 0;
+  private stateMapHeight = 0;
+  private statePixels: Uint8ClampedArray | null = null;
+
   /** 用于读取 Strategic Region LUT 像素的 Canvas 上下文 */
   private strategicRegionCtx: CanvasRenderingContext2D | null = null;
+  private strategicRegionMapWidth = 0;
+  private strategicRegionMapHeight = 0;
+  private strategicRegionPixels: Uint8ClampedArray | null = null;
+
+  /** 视口尺寸提供器（用于将鼠标坐标归一化） */
+  private getViewportSize: () => { width: number; height: number } = () => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
 
   /** 当前悬停的地块 */
   public hoveredProvince: ProvinceData | null = null;
@@ -44,7 +58,8 @@ export class ProvincePicker {
 
   /** 节流控制 */
   private lastPickTime = 0;
-  private pickInterval = 40; // ms
+  private pickInterval = 60; // ms（帧率优先）
+  private readonly colorSampleStride = 2; // 默认拾取：按 2px 网格采样（mousemove 性能优先）
 
   constructor(
     camera: THREE.Camera,
@@ -52,7 +67,8 @@ export class ProvincePicker {
     store: ProvinceStore,
     provinceMapCanvas: HTMLCanvasElement,
     stateLutCanvas?: HTMLCanvasElement,
-    strategicRegionLutCanvas?: HTMLCanvasElement
+    strategicRegionLutCanvas?: HTMLCanvasElement,
+    options?: { viewportSize?: () => { width: number; height: number } }
   ) {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
@@ -63,19 +79,34 @@ export class ProvincePicker {
     this.provinceMapWidth = provinceMapCanvas.width;
     this.provinceMapHeight = provinceMapCanvas.height;
     this.provinceCtx = provinceMapCanvas.getContext('2d', { willReadFrequently: true })!;
+    this.provincePixels = this.provinceCtx.getImageData(0, 0, this.provinceMapWidth, this.provinceMapHeight).data;
 
     if (stateLutCanvas) {
       this.stateCtx = stateLutCanvas.getContext('2d', { willReadFrequently: true })!;
+      this.stateMapWidth = stateLutCanvas.width;
+      this.stateMapHeight = stateLutCanvas.height;
+      this.statePixels = this.stateCtx.getImageData(0, 0, this.stateMapWidth, this.stateMapHeight).data;
     }
     if (strategicRegionLutCanvas) {
       this.strategicRegionCtx = strategicRegionLutCanvas.getContext('2d', { willReadFrequently: true })!;
+      this.strategicRegionMapWidth = strategicRegionLutCanvas.width;
+      this.strategicRegionMapHeight = strategicRegionLutCanvas.height;
+      this.strategicRegionPixels = this.strategicRegionCtx.getImageData(0, 0, this.strategicRegionMapWidth, this.strategicRegionMapHeight).data;
+    }
+
+    if (options?.viewportSize) {
+      this.getViewportSize = options.viewportSize;
     }
   }
 
   /** 更新鼠标位置（归一化到 -1~1） */
   updateMouse(clientX: number, clientY: number): void {
-    this.mouse.x = (clientX / window.innerWidth) * 2 - 1;
-    this.mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    const viewport = this.getViewportSize();
+    const width = Math.max(1, viewport.width);
+    const height = Math.max(1, viewport.height);
+
+    this.mouse.x = (clientX / width) * 2 - 1;
+    this.mouse.y = -(clientY / height) * 2 + 1;
   }
 
   /** 执行拾取（在 mousemove 中调用，带节流） */
@@ -93,64 +124,98 @@ export class ProvincePicker {
       const uv = hit.uv;
 
       if (uv) {
-        const px = Math.min(Math.floor(uv.x * this.provinceMapWidth), this.provinceMapWidth - 1);
-        const py = Math.min(Math.floor(uv.y * this.provinceMapHeight), this.provinceMapHeight - 1);
+        const rawPx = Math.min(Math.floor(uv.x * this.provinceMapWidth), this.provinceMapWidth - 1);
+        const rawPy = Math.min(Math.floor(uv.y * this.provinceMapHeight), this.provinceMapHeight - 1);
+        const resolved = this._resolveProvincePixel(rawPx, rawPy, force);
 
-        if (px >= 0 && px < this.provinceMapWidth && py >= 0 && py < this.provinceMapHeight) {
-          const pixel = this.provinceCtx.getImageData(px, py, 1, 1).data;
-          const r = pixel[0];
-          const g = pixel[1];
-          const b = pixel[2];
+        if (resolved) {
+          const { province, px, py, r, g, b } = resolved;
+          const sampleU = (px + 0.5) / this.provinceMapWidth;
+          const sampleV = (py + 0.5) / this.provinceMapHeight;
+          this.lastUV = { x: sampleU, y: sampleV };
 
-          // 调试：每次检测打印坐标
+          // 调试：点击时打印原始像素与纠偏后像素
           if (force) {
-            console.log(`[Pick] UV=(${uv.x.toFixed(4)}, ${uv.y.toFixed(4)}) → px=${px}, py=${py} → RGB=(${r},${g},${b})`);
+            console.log(`[Pick] UV=(${uv.x.toFixed(4)}, ${uv.y.toFixed(4)}) raw=(${rawPx},${rawPy}) -> resolved=(${px},${py}) RGB=(${r},${g},${b}) province=${province.id}`);
           }
 
-          const province = this.store.getProvinceByColor(r, g, b);
-
-          if (province && province !== this.hoveredProvince) {
+          // force=true（点击前强制 pick）时即使省份未变化也刷新一次，避免边界附近点击反馈滞后
+          const shouldRefreshHover = force || province !== this.hoveredProvince;
+          if (shouldRefreshHover) {
             this.hoveredProvince = province;
 
-            // 查找对应的 State
-            const state = province.stateId !== undefined
+            const isSeaProvince = province.type === 'sea' || province.type === 'lake';
+
+            // 查找对应的 State（仅陆地）
+            const state = !isSeaProvince && province.stateId !== undefined
               ? this.store.getStateById(province.stateId)
               : undefined;
             this.hoveredState = state || null;
 
-            // 查找对应海域（Strategic Region）
-            const strategicRegion = this.store.getStrategicRegionByProvinceId(province.id);
+            // 查找对应海域（Strategic Region，仅海域）
+            const strategicRegion = isSeaProvince
+              ? this.store.getStrategicRegionByProvinceId(province.id)
+              : undefined;
             this.hoveredStrategicRegion = strategicRegion || null;
 
             // 设置 Province 级别悬停（保留）
             this.terrainManager.setHoveredProvince(r, g, b);
 
-            // 设置 State 级别悬停（读取 State LUT 颜色）
+            const lutSampleStride = force ? 1 : this.colorSampleStride;
+
+            // 设置 State 级别悬停（读取 State LUT 缓存像素）
             if (this.stateCtx && state) {
-              const statePixel = this.stateCtx.getImageData(px, py, 1, 1).data;
-              this.terrainManager.setHoveredState(statePixel[0], statePixel[1], statePixel[2]);
+              const stateRgb = this._sampleRgbFromPixels(
+                this.statePixels,
+                this.stateMapWidth,
+                this.stateMapHeight,
+                sampleU,
+                sampleV,
+                lutSampleStride
+              );
+              if (stateRgb) {
+                this.terrainManager.setHoveredState(stateRgb[0], stateRgb[1], stateRgb[2]);
+              } else {
+                this.terrainManager.clearHoveredState();
+              }
             } else {
               this.terrainManager.clearHoveredState();
             }
 
-            if (this.strategicRegionCtx && strategicRegion) {
-              const strategicPixel = this.strategicRegionCtx.getImageData(px, py, 1, 1).data;
-              this.terrainManager.setHoveredStrategicRegion(strategicPixel[0], strategicPixel[1], strategicPixel[2]);
+            if (this.strategicRegionCtx && isSeaProvince && strategicRegion) {
+              const strategicRgb = this._sampleRgbFromPixels(
+                this.strategicRegionPixels,
+                this.strategicRegionMapWidth,
+                this.strategicRegionMapHeight,
+                sampleU,
+                sampleV,
+                lutSampleStride
+              );
+              if (strategicRgb) {
+                this.terrainManager.setHoveredStrategicRegion(strategicRgb[0], strategicRgb[1], strategicRgb[2]);
+              } else {
+                this.terrainManager.clearHoveredStrategicRegion();
+              }
             } else {
               this.terrainManager.clearHoveredStrategicRegion();
             }
 
+            // 以 Province 高亮作为主反馈源，避免 clearHoveredState/StrategicRegion 把 hoverTarget 拉回 0
+            this.terrainManager.setHoveredProvince(r, g, b);
+
             if (this.onHover) this.onHover(province, this.hoveredState, this.hoveredStrategicRegion);
-          } else if (!province && this.hoveredProvince) {
-            this.hoveredProvince = null;
-            this.hoveredState = null;
-            this.hoveredStrategicRegion = null;
-            this.terrainManager.clearHoveredProvince();
-            this.terrainManager.clearHoveredState();
-            this.terrainManager.clearHoveredStrategicRegion();
-            if (this.onHover) this.onHover(null, null, null);
           }
+        } else if (this.hoveredProvince) {
+          this.hoveredProvince = null;
+          this.hoveredState = null;
+          this.hoveredStrategicRegion = null;
+          this.terrainManager.clearHoveredProvince();
+          this.terrainManager.clearHoveredState();
+          this.terrainManager.clearHoveredStrategicRegion();
+          if (this.onHover) this.onHover(null, null, null);
         }
+      } else {
+        this.lastUV = null;
       }
     } else {
       if (this.hoveredProvince) {
@@ -162,6 +227,7 @@ export class ProvincePicker {
         this.terrainManager.clearHoveredStrategicRegion();
         if (this.onHover) this.onHover(null, null, null);
       }
+      this.lastUV = null;
     }
   }
 
@@ -176,26 +242,48 @@ export class ProvincePicker {
 
       // 设置 State 级别选中
       if (this.stateCtx && this.selectedState) {
-        // 使用当前 UV 位置读取 State LUT 颜色
+        // 使用缓存的 UV 位置读取 State LUT 颜色
         const uv = this._getLastUV();
         if (uv) {
-          const px = Math.min(Math.floor(uv.x * this.provinceMapWidth), this.provinceMapWidth - 1);
-          const py = Math.min(Math.floor(uv.y * this.provinceMapHeight), this.provinceMapHeight - 1);
-          const statePixel = this.stateCtx.getImageData(px, py, 1, 1).data;
-          this.terrainManager.setSelectedState(statePixel[0], statePixel[1], statePixel[2]);
+          const stateRgb = this._sampleRgbFromPixels(
+            this.statePixels,
+            this.stateMapWidth,
+            this.stateMapHeight,
+            uv.x,
+            uv.y,
+            1
+          );
+          if (stateRgb) {
+            this.terrainManager.setSelectedState(stateRgb[0], stateRgb[1], stateRgb[2]);
+          } else {
+            this.terrainManager.clearSelectedState();
+          }
+        } else {
+          this.terrainManager.clearSelectedState();
         }
       } else {
         this.terrainManager.clearSelectedState();
       }
 
-      if (this.strategicRegionCtx && this.selectedStrategicRegion) {
-        // 使用当前 UV 位置读取 Strategic Region LUT 颜色
+      if (this.strategicRegionCtx && this.selectedStrategicRegion && this.selectedProvince.type !== 'land') {
+        // 使用缓存的 UV 位置读取 Strategic Region LUT 颜色
         const uv = this._getLastUV();
         if (uv) {
-          const px = Math.min(Math.floor(uv.x * this.provinceMapWidth), this.provinceMapWidth - 1);
-          const py = Math.min(Math.floor(uv.y * this.provinceMapHeight), this.provinceMapHeight - 1);
-          const strategicPixel = this.strategicRegionCtx.getImageData(px, py, 1, 1).data;
-          this.terrainManager.setSelectedStrategicRegion(strategicPixel[0], strategicPixel[1], strategicPixel[2]);
+          const strategicRgb = this._sampleRgbFromPixels(
+            this.strategicRegionPixels,
+            this.strategicRegionMapWidth,
+            this.strategicRegionMapHeight,
+            uv.x,
+            uv.y,
+            1
+          );
+          if (strategicRgb) {
+            this.terrainManager.setSelectedStrategicRegion(strategicRgb[0], strategicRgb[1], strategicRgb[2]);
+          } else {
+            this.terrainManager.clearSelectedStrategicRegion();
+          }
+        } else {
+          this.terrainManager.clearSelectedStrategicRegion();
         }
       } else {
         this.terrainManager.clearSelectedStrategicRegion();
@@ -217,13 +305,88 @@ export class ProvincePicker {
   private lastUV: { x: number; y: number } | null = null;
 
   private _getLastUV(): { x: number; y: number } | null {
-    // 重新执行一次 raycast 来获取 UV
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-    const meshes = this.terrainManager.getMeshes();
-    const intersects = this.raycaster.intersectObjects(meshes, false);
-    if (intersects.length > 0 && intersects[0].uv) {
-      return { x: intersects[0].uv.x, y: intersects[0].uv.y };
+    return this.lastUV;
+  }
+
+  private _sampleRgbFromPixels(
+    pixels: Uint8ClampedArray | null,
+    width: number,
+    height: number,
+    u: number,
+    v: number,
+    sampleStride: number = this.colorSampleStride
+  ): [number, number, number] | null {
+    if (!pixels || width <= 0 || height <= 0) return null;
+
+    const rawPx = Math.max(0, Math.min(width - 1, Math.floor(u * width)));
+    const rawPy = Math.max(0, Math.min(height - 1, Math.floor(v * height)));
+    const px = this._quantizePixel(rawPx, width, sampleStride);
+    const py = this._quantizePixel(rawPy, height, sampleStride);
+    const idx = (py * width + px) * 4;
+
+    return [pixels[idx], pixels[idx + 1], pixels[idx + 2]];
+  }
+
+  private _resolveProvincePixel(
+    rawPx: number,
+    rawPy: number,
+    force: boolean
+  ): { province: ProvinceData; px: number; py: number; r: number; g: number; b: number } | null {
+    const x = Math.max(0, Math.min(this.provinceMapWidth - 1, rawPx));
+    const y = Math.max(0, Math.min(this.provinceMapHeight - 1, rawPy));
+
+    const sampleAt = (sx: number, sy: number): { province: ProvinceData; px: number; py: number; r: number; g: number; b: number } | null => {
+      const cx = Math.max(0, Math.min(this.provinceMapWidth - 1, sx));
+      const cy = Math.max(0, Math.min(this.provinceMapHeight - 1, sy));
+      const idx = (cy * this.provinceMapWidth + cx) * 4;
+      const r = this.provincePixels[idx];
+      const g = this.provincePixels[idx + 1];
+      const b = this.provincePixels[idx + 2];
+      const province = this.store.getProvinceByColor(r, g, b);
+      if (!province) return null;
+      return { province, px: cx, py: cy, r, g, b };
+    };
+
+    // 常规拾取：保持 stride 量化（性能优先）
+    if (!force) {
+      const px = this._quantizePixel(x, this.provinceMapWidth, this.colorSampleStride);
+      const py = this._quantizePixel(y, this.provinceMapHeight, this.colorSampleStride);
+      return sampleAt(px, py);
     }
+
+    // 强制拾取（点击）：优先中心像素，避免小陆地省份被邻域多数像素“吞掉”
+    const center = sampleAt(x, y);
+    if (center) return center;
+
+    // 若中心像素无有效省份（边界/异常像素），再按距离从近到远搜索
+    const maxRadius = 3;
+    for (let radius = 1; radius <= maxRadius; radius++) {
+      let best: { province: ProvinceData; px: number; py: number; r: number; g: number; b: number } | null = null;
+      let bestDist2 = Number.POSITIVE_INFINITY;
+
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
+          const hit = sampleAt(x + dx, y + dy);
+          if (!hit) continue;
+          const dist2 = dx * dx + dy * dy;
+          if (dist2 < bestDist2) {
+            bestDist2 = dist2;
+            best = hit;
+          }
+        }
+      }
+
+      if (best) return best;
+    }
+
     return null;
+  }
+
+  private _quantizePixel(value: number, size: number, sampleStride: number = this.colorSampleStride): number {
+    const stride = sampleStride;
+    if (stride <= 1) return Math.max(0, Math.min(size - 1, value));
+    const q = Math.floor(value / stride) * stride;
+    return Math.max(0, Math.min(size - 1, q));
   }
 }

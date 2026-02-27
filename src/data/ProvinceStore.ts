@@ -92,13 +92,19 @@ export class ProvinceStore {
   private provinceToStrategicRegionMap = new Map<number, number>();
 
   /** 异步加载 HOI4 数据 */
-  async loadFromHOI4Data(): Promise<void> {
-    console.log('[ProvinceStore] 正在加载 HOI4 地块数据...');
+  async loadFromHOI4Data(options?: { provincesUrl?: string; statesUrl?: string }): Promise<void> {
+    const provincesUrl = options?.provincesUrl || assetUrl('provinces.json');
+    const statesUrl = options?.statesUrl || assetUrl('states.json');
+
+    console.log('[ProvinceStore] 正在加载 HOI4 地块数据...', {
+      provincesUrl,
+      statesUrl,
+    });
 
     // 并行加载 provinces.json 和 states.json
     const [provResponse, statesResponse] = await Promise.all([
-      fetch(assetUrl('provinces.json')),
-      fetch(assetUrl('states.json')),
+      fetch(provincesUrl),
+      fetch(statesUrl),
     ]);
 
     if (!provResponse.ok) {
