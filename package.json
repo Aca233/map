@@ -1,28 +1,12 @@
 {
-  "name": "@hoi4/map-core",
+  "name": "hoi4-map",
   "version": "1.0.0",
-  "private": false,
+  "private": true,
   "type": "module",
-  "main": "./dist-lib/index.js",
-  "module": "./dist-lib/index.js",
-  "types": "./dist-lib/lib/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist-lib/lib/index.d.ts",
-      "import": "./dist-lib/index.js"
-    }
-  },
-  "files": [
-    "dist-lib"
-  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:lib": "tsc -p tsconfig.lib.json && vite build -c vite.lib.config.ts",
     "preview": "vite preview"
-  },
-  "peerDependencies": {
-    "three": "^0.170.0"
   },
   "dependencies": {
     "dds-parser": "^1.0.1",

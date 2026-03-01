@@ -10,12 +10,13 @@ import * as THREE from 'three';
 import terrainVertShader from './shaders/terrain.vert.glsl';
 import terrainFragShader from './shaders/terrain.frag.glsl';
 
-/** 分块配置 */
-const CHUNKS_X = 8;   // 水平方向分块数
-const CHUNKS_Z = 3;   // 垂直方向分块数
-const SEGS_PER_CHUNK_X = 256; // 每个分块的水平段数
-const SEGS_PER_CHUNK_Z = 248; // 每个分块的垂直段数
-// 总段数: 2048 x 744，接近原来的 2048 x 745
+/** 分块配置（帧率优先档） */
+export const TERRAIN_CHUNKS_X = 6;   // 水平方向分块数
+export const TERRAIN_CHUNKS_Z = 2;   // 垂直方向分块数
+export const TERRAIN_SEGS_PER_CHUNK_X = 224; // 每个分块的水平段数
+export const TERRAIN_SEGS_PER_CHUNK_Z = 224; // 每个分块的垂直段数
+export const TERRAIN_TOTAL_SEGS_X = TERRAIN_CHUNKS_X * TERRAIN_SEGS_PER_CHUNK_X;
+export const TERRAIN_TOTAL_SEGS_Z = TERRAIN_CHUNKS_Z * TERRAIN_SEGS_PER_CHUNK_Z;
 
 export class TerrainManager {
   /** 地形 Mesh（用于 Raycaster） */
@@ -34,6 +35,12 @@ export class TerrainManager {
   public strategicRegionLutTexture!: THREE.Texture;
   /** 河流纹理（HOI4 rivers.bmp 转换） */
   public riversTexture!: THREE.Texture;
+  /** HOI4 原版陆地地形色图 */
+  public terrainColormapTexture!: THREE.Texture;
+  /** HOI4 原版水体地形色图 */
+  public waterColormapTexture!: THREE.Texture;
+  /** 城市灯光掩码纹理（来自 colormap alpha） */
+  public cityLightsTexture!: THREE.Texture;
 
   private scene: THREE.Scene;
   private mapWidth: number;
@@ -69,6 +76,9 @@ export class TerrainManager {
     stateLutTex: THREE.Texture,
     strategicRegionLutTex: THREE.Texture,
     riversTex: THREE.Texture,
+    terrainColormapTex: THREE.Texture,
+    waterColormapTex: THREE.Texture,
+    cityLightsTex: THREE.Texture,
     texWidth: number,
     texHeight: number,
     heightmapCanvas: HTMLCanvasElement
@@ -79,6 +89,9 @@ export class TerrainManager {
     this.stateLutTexture = stateLutTex;
     this.strategicRegionLutTexture = strategicRegionLutTex;
     this.riversTexture = riversTex;
+    this.terrainColormapTexture = terrainColormapTex;
+    this.waterColormapTexture = waterColormapTex;
+    this.cityLightsTexture = cityLightsTex;
     this.heightmapCanvas = heightmapCanvas;
 
     // 预先读取高度图数据，避免每个 chunk 都重复 getImageData
@@ -100,6 +113,10 @@ export class TerrainManager {
         u_stateLUT: { value: this.stateLutTexture },
         u_strategicRegionLUT: { value: this.strategicRegionLutTexture },
         u_riversMap: { value: this.riversTexture },
+        u_terrainColormap: { value: this.terrainColormapTexture },
+        u_waterColormap: { value: this.waterColormapTexture },
+        u_cityLightsMap: { value: this.cityLightsTexture },
+        u_cityLightsIntensity: { value: 1.0 },
         u_mapSize: { value: new THREE.Vector2(texWidth, texHeight) },
         u_hoveredColor: { value: new THREE.Vector3(-1, -1, -1) },
         u_selectedColor: { value: new THREE.Vector3(-1, -1, -1) },
@@ -127,18 +144,18 @@ export class TerrainManager {
     const totalHeight = this.mapHeight;
     const imgData = this.heightmapData;
 
-    const chunkW = totalWidth / CHUNKS_X;   // 每个 chunk 的世界宽度
-    const chunkH = totalHeight / CHUNKS_Z;  // 每个 chunk 的世界高度（深度方向）
+    const chunkW = totalWidth / TERRAIN_CHUNKS_X;   // 每个 chunk 的世界宽度
+    const chunkH = totalHeight / TERRAIN_CHUNKS_Z;  // 每个 chunk 的世界高度（深度方向）
 
-    const totalSegsX = SEGS_PER_CHUNK_X * CHUNKS_X; // 2048
-    const totalSegsZ = SEGS_PER_CHUNK_Z * CHUNKS_Z; // 744
+    const totalSegsX = TERRAIN_TOTAL_SEGS_X;
+    const totalSegsZ = TERRAIN_TOTAL_SEGS_Z;
 
-    console.log(`[TerrainManager] 分块创建: ${CHUNKS_X}x${CHUNKS_Z} 块, 每块 ${SEGS_PER_CHUNK_X}x${SEGS_PER_CHUNK_Z} 段, 总计 ${totalSegsX}x${totalSegsZ} 段`);
+    console.log(`[TerrainManager] 分块创建: ${TERRAIN_CHUNKS_X}x${TERRAIN_CHUNKS_Z} 块, 每块 ${TERRAIN_SEGS_PER_CHUNK_X}x${TERRAIN_SEGS_PER_CHUNK_Z} 段, 总计 ${totalSegsX}x${totalSegsZ} 段`);
 
     // 为每个 chunk 创建独立的 geometry
-    for (let cz = 0; cz < CHUNKS_Z; cz++) {
-      for (let cx = 0; cx < CHUNKS_X; cx++) {
-        const geometry = new THREE.PlaneGeometry(chunkW, chunkH, SEGS_PER_CHUNK_X, SEGS_PER_CHUNK_Z);
+    for (let cz = 0; cz < TERRAIN_CHUNKS_Z; cz++) {
+      for (let cx = 0; cx < TERRAIN_CHUNKS_X; cx++) {
+        const geometry = new THREE.PlaneGeometry(chunkW, chunkH, TERRAIN_SEGS_PER_CHUNK_X, TERRAIN_SEGS_PER_CHUNK_Z);
         geometry.rotateX(-Math.PI / 2);
 
         // 计算此 chunk 的世界偏移（以地形中心为原点）
@@ -146,11 +163,11 @@ export class TerrainManager {
         const offsetZ = -totalHeight / 2 + chunkH / 2 + cz * chunkH;
 
         // 计算此 chunk 对应的 UV 范围
-        const uvMinX = cx / CHUNKS_X;
-        const uvMaxX = (cx + 1) / CHUNKS_X;
+        const uvMinX = cx / TERRAIN_CHUNKS_X;
+        const uvMaxX = (cx + 1) / TERRAIN_CHUNKS_X;
         // V 轴：cz=0 是 Z 最负（北方），对应图片顶部 V=0
-        const uvMinV = cz / CHUNKS_Z;
-        const uvMaxV = (cz + 1) / CHUNKS_Z;
+        const uvMinV = cz / TERRAIN_CHUNKS_Z;
+        const uvMaxV = (cz + 1) / TERRAIN_CHUNKS_Z;
 
         const uvAttr = geometry.getAttribute('uv');
         const posAttr = geometry.getAttribute('position');
@@ -178,6 +195,7 @@ export class TerrainManager {
 
         uvAttr.needsUpdate = true;
         posAttr.needsUpdate = true;
+        geometry.computeVertexNormals();
         geometry.computeBoundingSphere();
         geometry.computeBoundingBox();
 
@@ -196,9 +214,9 @@ export class TerrainManager {
     // 释放高度图数据缓存（不再需要）
     this.heightmapData = null;
 
-    const totalMeshes = CHUNKS_X * CHUNKS_Z * 3;
-    const verticesPerChunk = (SEGS_PER_CHUNK_X + 1) * (SEGS_PER_CHUNK_Z + 1);
-    console.log(`[TerrainManager] 已创建 ${totalMeshes} 个分块网格（${CHUNKS_X}x${CHUNKS_Z}x3），每块 ${verticesPerChunk} 顶点，通过视锥体剔除优化渲染`);
+    const totalMeshes = TERRAIN_CHUNKS_X * TERRAIN_CHUNKS_Z * 3;
+    const verticesPerChunk = (TERRAIN_SEGS_PER_CHUNK_X + 1) * (TERRAIN_SEGS_PER_CHUNK_Z + 1);
+    console.log(`[TerrainManager] 已创建 ${totalMeshes} 个分块网格（${TERRAIN_CHUNKS_X}x${TERRAIN_CHUNKS_Z}x3），每块 ${verticesPerChunk} 顶点，通过视锥体剔除优化渲染`);
   }
 
   /** 更新时间 uniform 和过渡动画 */
@@ -240,7 +258,6 @@ export class TerrainManager {
     if (this.material) {
       this.material.uniforms.u_hoveredColor.value.set(r / 255, g / 255, b / 255);
       this.hoverTarget = 1.0;
-      this.hoverCurrent = 0.0; // 重置，从 0 开始淡入
     }
   }
 
@@ -260,7 +277,6 @@ export class TerrainManager {
     if (this.material) {
       this.material.uniforms.u_selectedColor.value.set(r / 255, g / 255, b / 255);
       this.selectTarget = 1.0;
-      this.selectCurrent = 0.0;
     }
   }
 
@@ -280,18 +296,13 @@ export class TerrainManager {
   setHoveredState(r: number, g: number, b: number): void {
     if (this.material) {
       this.material.uniforms.u_hoveredStateColor.value.set(r / 255, g / 255, b / 255);
-      this.hoverTarget = 1.0;
-      this.hoverCurrent = 0.0;
     }
   }
 
   /** 清除悬停 State */
   clearHoveredState(): void {
     if (this.material) {
-      this.hoverTarget = 0.0;
-      if (this.hoverCurrent <= 0.01) {
-        this.material.uniforms.u_hoveredStateColor.value.set(-1, -1, -1);
-      }
+      this.material.uniforms.u_hoveredStateColor.value.set(-1, -1, -1);
     }
   }
 
@@ -299,18 +310,13 @@ export class TerrainManager {
   setSelectedState(r: number, g: number, b: number): void {
     if (this.material) {
       this.material.uniforms.u_selectedStateColor.value.set(r / 255, g / 255, b / 255);
-      this.selectTarget = 1.0;
-      this.selectCurrent = 0.0;
     }
   }
 
   /** 清除选中 State */
   clearSelectedState(): void {
     if (this.material) {
-      this.selectTarget = 0.0;
-      if (this.selectCurrent <= 0.01) {
-        this.material.uniforms.u_selectedStateColor.value.set(-1, -1, -1);
-      }
+      this.material.uniforms.u_selectedStateColor.value.set(-1, -1, -1);
     }
   }
 
@@ -320,18 +326,13 @@ export class TerrainManager {
   setHoveredStrategicRegion(r: number, g: number, b: number): void {
     if (this.material) {
       this.material.uniforms.u_hoveredStrategicRegionColor.value.set(r / 255, g / 255, b / 255);
-      this.hoverTarget = 1.0;
-      this.hoverCurrent = 0.0;
     }
   }
 
   /** 清除悬停 Strategic Region */
   clearHoveredStrategicRegion(): void {
     if (this.material) {
-      this.hoverTarget = 0.0;
-      if (this.hoverCurrent <= 0.01) {
-        this.material.uniforms.u_hoveredStrategicRegionColor.value.set(-1, -1, -1);
-      }
+      this.material.uniforms.u_hoveredStrategicRegionColor.value.set(-1, -1, -1);
     }
   }
 
@@ -339,18 +340,13 @@ export class TerrainManager {
   setSelectedStrategicRegion(r: number, g: number, b: number): void {
     if (this.material) {
       this.material.uniforms.u_selectedStrategicRegionColor.value.set(r / 255, g / 255, b / 255);
-      this.selectTarget = 1.0;
-      this.selectCurrent = 0.0;
     }
   }
 
   /** 清除选中 Strategic Region */
   clearSelectedStrategicRegion(): void {
     if (this.material) {
-      this.selectTarget = 0.0;
-      if (this.selectCurrent <= 0.01) {
-        this.material.uniforms.u_selectedStrategicRegionColor.value.set(-1, -1, -1);
-      }
+      this.material.uniforms.u_selectedStrategicRegionColor.value.set(-1, -1, -1);
     }
   }
 
@@ -358,6 +354,13 @@ export class TerrainManager {
   setMapMode(mode: number): void {
     if (this.material) {
       this.material.uniforms.u_mapMode.value = mode;
+    }
+  }
+
+  /** 设置城市灯光强度（0=关闭） */
+  setCityLightsIntensity(intensity: number): void {
+    if (this.material) {
+      this.material.uniforms.u_cityLightsIntensity.value = Math.max(0, intensity);
     }
   }
 

@@ -14,3 +14,8 @@ declare module '*.frag' {
   const value: string;
   export default value;
 }
+
+declare module '*.obj?raw' {
+  const value: string;
+  export default value;
+}

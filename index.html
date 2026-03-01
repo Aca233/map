@@ -120,6 +120,34 @@
       padding: 4px;
       backdrop-filter: blur(10px);
     }
+
+    #layer-toggles {
+      position: absolute;
+      left: 12px;
+      bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(10, 10, 30, 0.82);
+      border: 1px solid rgba(100, 140, 200, 0.35);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #d6deef;
+      font-size: 12px;
+      backdrop-filter: blur(8px);
+      z-index: 120;
+    }
+    .layer-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .layer-toggle-row input {
+      accent-color: #6da8ff;
+    }
+
     .map-mode-btn {
       background: rgba(40, 50, 80, 0.6);
       border: 1px solid transparent;
@@ -192,6 +220,21 @@
       <button class="map-mode-btn" data-mode="state">行政区</button>
       <button class="map-mode-btn" data-mode="terrain">地形</button>
       <button class="map-mode-btn" data-mode="heightmap">高度</button>
+    </div>
+
+    <div id="layer-toggles">
+      <label class="layer-toggle-row">
+        <input id="toggle-city-scatter" type="checkbox" checked />
+        <span>城市散布</span>
+      </label>
+      <label class="layer-toggle-row">
+        <input id="toggle-buildings" type="checkbox" checked />
+        <span>建筑</span>
+      </label>
+      <label class="layer-toggle-row">
+        <input id="toggle-city-lights" type="checkbox" checked />
+        <span>城市灯光</span>
+      </label>
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>

@@ -14,29 +14,20 @@ varying vec3 v_viewDir;
 void main() {
     v_uv = uv;
 
-    // 高度值仍然从纹理读取（用于 fragment shader 的地形着色）
-    float heightValue = texture2D(u_heightmap, uv).r;
-    v_height = heightValue;
-
     // CPU 端已经完成了顶点 Y 位移，这里直接使用 position
     vec3 newPosition = position;
+
+    // 由位移后高度反推归一化高度值，避免重复采样高度图
+    v_height = clamp((newPosition.y - u_displacementBias) / max(u_heightScale, 0.0001), 0.0, 1.0);
 
     v_worldPos = (modelMatrix * vec4(newPosition, 1.0)).xyz;
 
     // 视线方向（从顶点指向相机）
     v_viewDir = normalize(u_cameraPos - v_worldPos);
 
-    // 计算法线（通过采样相邻高度值）
-    float hL = texture2D(u_heightmap, uv + vec2(-u_texelSize.x, 0.0)).r * u_heightScale;
-    float hR = texture2D(u_heightmap, uv + vec2(u_texelSize.x, 0.0)).r * u_heightScale;
-    float hD = texture2D(u_heightmap, uv + vec2(0.0, -u_texelSize.y)).r * u_heightScale;
-    float hU = texture2D(u_heightmap, uv + vec2(0.0, u_texelSize.y)).r * u_heightScale;
-
-    vec3 calcNormal = normalize(vec3(hL - hR, 2.0, hD - hU));
-
-    // 关键：输出世界空间法线，避免 normalMatrix(含 view) 导致相机角度改变时颜色漂移
-    // 这里使用 modelMatrix 的 3x3 部分将局部法线变换到世界空间
-    v_normal = normalize(mat3(modelMatrix) * calcNormal);
+    // 使用 CPU 预计算几何法线，避免每顶点 4 邻域高度采样
+    // 输出世界空间法线，避免 normalMatrix(含 view) 导致相机角度改变时颜色漂移
+    v_normal = normalize(mat3(modelMatrix) * normal);
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
 }

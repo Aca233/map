@@ -33,12 +33,6 @@ export class ProvincePicker {
   private strategicRegionMapHeight = 0;
   private strategicRegionPixels: Uint8ClampedArray | null = null;
 
-  /** 视口尺寸提供器（用于将鼠标坐标归一化） */
-  private getViewportSize: () => { width: number; height: number } = () => ({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
-
   /** 当前悬停的地块 */
   public hoveredProvince: ProvinceData | null = null;
   /** 当前选中的地块 */
@@ -67,8 +61,7 @@ export class ProvincePicker {
     store: ProvinceStore,
     provinceMapCanvas: HTMLCanvasElement,
     stateLutCanvas?: HTMLCanvasElement,
-    strategicRegionLutCanvas?: HTMLCanvasElement,
-    options?: { viewportSize?: () => { width: number; height: number } }
+    strategicRegionLutCanvas?: HTMLCanvasElement
   ) {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
@@ -93,20 +86,12 @@ export class ProvincePicker {
       this.strategicRegionMapHeight = strategicRegionLutCanvas.height;
       this.strategicRegionPixels = this.strategicRegionCtx.getImageData(0, 0, this.strategicRegionMapWidth, this.strategicRegionMapHeight).data;
     }
-
-    if (options?.viewportSize) {
-      this.getViewportSize = options.viewportSize;
-    }
   }
 
   /** 更新鼠标位置（归一化到 -1~1） */
   updateMouse(clientX: number, clientY: number): void {
-    const viewport = this.getViewportSize();
-    const width = Math.max(1, viewport.width);
-    const height = Math.max(1, viewport.height);
-
-    this.mouse.x = (clientX / width) * 2 - 1;
-    this.mouse.y = -(clientY / height) * 2 + 1;
+    this.mouse.x = (clientX / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(clientY / window.innerHeight) * 2 + 1;
   }
 
   /** 执行拾取（在 mousemove 中调用，带节流） */

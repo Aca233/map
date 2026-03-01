@@ -8,15 +8,21 @@
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
+import { parseHeaders, decodeDds } from 'dds-parser';
 
 // ===== 配置 =====
 const HOI4_DIR = 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Hearts of Iron IV';
 const MAP_DIR = path.join(HOI4_DIR, 'map');
+const MAP_TERRAIN_DIR = path.join(MAP_DIR, 'terrain');
 const STATES_DIR = path.join(HOI4_DIR, 'history', 'states');
 const STRATEGIC_REGIONS_DIR = path.join(MAP_DIR, 'strategicregions');
 const COUNTRY_COLORS_FILE = path.join(HOI4_DIR, 'common', 'countries', 'colors.txt');
 const COUNTRY_TAGS_FILE = path.join(HOI4_DIR, 'common', 'country_tags', '00_countries.txt');
 const COUNTRIES_DIR = path.join(HOI4_DIR, 'common', 'countries');
+const CITIES_BMP_FILE = path.join(MAP_DIR, 'cities.bmp');
+const CITIES_TXT_FILE = path.join(MAP_DIR, 'cities.txt');
+const BUILDINGS_FILE = path.join(MAP_DIR, 'buildings.txt');
+const TERRAIN_COLORMAP_DDS_FILE = path.join(MAP_TERRAIN_DIR, 'colormap_rgb_cityemissivemask_a.dds');
 const OUTPUT_DIR = path.resolve('public', 'assets');
 
 if (!fs.existsSync(OUTPUT_DIR)) {
@@ -45,6 +51,17 @@ function hsvToRgb(h, s, v) {
     Math.min(1, g1 + m),
     Math.min(1, b1 + m),
   ];
+}
+
+function mulberry32(seed) {
+  let s = seed >>> 0;
+  return function rand() {
+    s |= 0;
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 // ===== 解析 common/countries/colors.txt 中的国家颜色 =====
@@ -226,12 +243,273 @@ function parseBMP(filePath) {
   return { width, height, pixels, channels: 4 };
 }
 
+function parseBMPIndexed(filePath) {
+  const buf = fs.readFileSync(filePath);
+
+  // BMP File Header (14 bytes)
+  const signature = buf.toString('ascii', 0, 2);
+  if (signature !== 'BM') throw new Error('Not a BMP file');
+
+  const dataOffset = buf.readUInt32LE(10);
+
+  // DIB Header
+  const headerSize = buf.readUInt32LE(14);
+  const width = buf.readInt32LE(18);
+  let height = buf.readInt32LE(22);
+  const bitsPerPixel = buf.readUInt16LE(28);
+  const compression = buf.readUInt32LE(30);
+
+  if (bitsPerPixel !== 8) {
+    throw new Error(`parseBMPIndexed 仅支持 8-bit BMP，当前 ${bitsPerPixel}bpp`);
+  }
+  if (compression !== 0) {
+    throw new Error(`parseBMPIndexed 仅支持无压缩 BMP，当前 compression=${compression}`);
+  }
+
+  const topDown = height < 0;
+  height = Math.abs(height);
+
+  const paletteOffset = 14 + headerSize;
+  const numColors = 1 << bitsPerPixel;
+  const palette = [];
+  for (let i = 0; i < numColors; i++) {
+    const offset = paletteOffset + i * 4;
+    palette.push({
+      b: buf[offset],
+      g: buf[offset + 1],
+      r: buf[offset + 2],
+      a: buf[offset + 3] || 255,
+    });
+  }
+
+  const rowSize = Math.ceil((bitsPerPixel * width) / 32) * 4;
+  const indices = new Uint8Array(width * height);
+
+  for (let y = 0; y < height; y++) {
+    const srcY = topDown ? y : (height - 1 - y);
+    const rowOffset = dataOffset + srcY * rowSize;
+
+    for (let x = 0; x < width; x++) {
+      indices[y * width + x] = buf[rowOffset + x];
+    }
+  }
+
+  return { width, height, indices, palette };
+}
+
+function bufferToArrayBuffer(buf) {
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+}
+
+function countMaskBits(mask) {
+  let bits = 0;
+  let m = mask >>> 0;
+  while (m !== 0) {
+    bits += (m & 1);
+    m >>>= 1;
+  }
+  return bits;
+}
+
+function countTrailingZeros(mask) {
+  let shift = 0;
+  let m = mask >>> 0;
+  while (shift < 32 && (m & 1) === 0) {
+    m >>>= 1;
+    shift++;
+  }
+  return shift;
+}
+
+function decodeMaskedChannel(pixelValue, mask) {
+  if (!mask) return 0;
+
+  const shift = countTrailingZeros(mask);
+  const normalizedMask = mask >>> shift;
+  const bitCount = countMaskBits(normalizedMask);
+  if (bitCount <= 0) return 0;
+
+  const raw = (pixelValue & mask) >>> shift;
+  const maxValue = (1 << bitCount) - 1;
+  return Math.round((raw / maxValue) * 255);
+}
+
+/**
+ * 解析 DDS 文件（支持：DXT1/DXT3/DXT5/ATI2 与 32-bit bitmask 非压缩 DDS）
+ */
+function parseDDS(filePath) {
+  const buf = fs.readFileSync(filePath);
+
+  if (buf.toString('ascii', 0, 4) !== 'DDS ') {
+    throw new Error(`不是有效的 DDS 文件: ${filePath}`);
+  }
+
+  const headerSize = buf.readUInt32LE(4);
+  const width = buf.readUInt32LE(16);
+  const height = buf.readUInt32LE(12);
+  const pitchOrLinearSize = buf.readUInt32LE(20);
+
+  const pfFlags = buf.readUInt32LE(80);
+  const fourCC = buf.readUInt32LE(84);
+  const rgbBitCount = buf.readUInt32LE(88);
+  const rMask = buf.readUInt32LE(92);
+  const gMask = buf.readUInt32LE(96);
+  const bMask = buf.readUInt32LE(100);
+  const aMask = buf.readUInt32LE(104);
+
+  const DDPF_FOURCC = 0x4;
+  const isFourCC = (pfFlags & DDPF_FOURCC) !== 0;
+
+  // 压缩 DDS（DXT1/DXT3/DXT5/ATI2）
+  if (isFourCC && fourCC !== 0) {
+    const arrayBuffer = bufferToArrayBuffer(buf);
+    const info = parseHeaders(arrayBuffer);
+    const image = info.images[0];
+    const encoded = new Uint8Array(arrayBuffer, image.offset, image.length);
+    const decoded = decodeDds(encoded, info.format, image.shape.width, image.shape.height);
+
+    return {
+      width: image.shape.width,
+      height: image.shape.height,
+      pixels: Buffer.from(decoded),
+      channels: 4,
+      format: info.format,
+    };
+  }
+
+  // 非压缩 DDS（32-bit bitmask，HOI4 的 colormap_rgb_cityemissivemask_a.dds 属于此类）
+  if (rgbBitCount !== 32) {
+    throw new Error(`不支持的非压缩 DDS 位深: ${rgbBitCount} (文件: ${filePath})`);
+  }
+
+  const dataOffset = headerSize + 4;
+  const rowBytes = pitchOrLinearSize >= width * 4 ? pitchOrLinearSize : width * 4;
+  const pixels = Buffer.alloc(width * height * 4);
+
+  for (let y = 0; y < height; y++) {
+    const srcRow = dataOffset + y * rowBytes;
+
+    for (let x = 0; x < width; x++) {
+      const src = srcRow + x * 4;
+      const packed = buf.readUInt32LE(src);
+
+      const r = decodeMaskedChannel(packed, rMask);
+      const g = decodeMaskedChannel(packed, gMask);
+      const b = decodeMaskedChannel(packed, bMask);
+      const a = aMask ? decodeMaskedChannel(packed, aMask) : 255;
+
+      const dst = (y * width + x) * 4;
+      pixels[dst] = r;
+      pixels[dst + 1] = g;
+      pixels[dst + 2] = b;
+      pixels[dst + 3] = a;
+    }
+  }
+
+  return {
+    width,
+    height,
+    pixels,
+    channels: 4,
+    format: 'rgba32',
+  };
+}
+
+function forceOpaqueRgba(pixels) {
+  // colormap_rgb_cityemissivemask_a 的 A 通道是发光/城市遮罩，不是可视颜色透明度。
+  // 若保留原 alpha，浏览器在 Canvas/WebGL 采样时会发生预乘，导致 RGB 被压暗甚至接近黑色。
+  const out = Buffer.from(pixels);
+  for (let i = 3; i < out.length; i += 4) {
+    out[i] = 255;
+  }
+  return out;
+}
+
+function extractAlphaToGray(pixels) {
+  const out = Buffer.alloc(Math.floor(pixels.length / 4));
+  let j = 0;
+  for (let i = 3; i < pixels.length; i += 4) {
+    out[j++] = pixels[i];
+  }
+  return out;
+}
+
+function stripHoi4Comments(text) {
+  return text.replace(/#.*$/gm, '');
+}
+
+function extractScriptBlocks(text, key) {
+  const blocks = [];
+  const regex = new RegExp(`${key}\\s*=\\s*\\{`, 'g');
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    const openIdx = text.indexOf('{', match.index);
+    if (openIdx < 0) break;
+
+    let depth = 1;
+    let i = openIdx + 1;
+    while (i < text.length && depth > 0) {
+      const ch = text[i];
+      if (ch === '{') depth++;
+      else if (ch === '}') depth--;
+      i++;
+    }
+
+    if (depth !== 0) break;
+    blocks.push(text.slice(openIdx + 1, i - 1));
+    regex.lastIndex = i;
+  }
+
+  return blocks;
+}
+
+function parseCitiesConfig(filePath) {
+  const raw = fs.readFileSync(filePath, 'utf-8');
+  const text = stripHoi4Comments(raw);
+
+  const typesSource = text.match(/types_source\s*=\s*"([^"]+)"/)?.[1] ?? 'map/cities.bmp';
+  const pixelStepX = parseInt(text.match(/pixel_step_x\s*=\s*(-?\d+)/)?.[1] ?? '1', 10) || 1;
+  const pixelStepY = parseInt(text.match(/pixel_step_y\s*=\s*(-?\d+)/)?.[1] ?? '1', 10) || 1;
+
+  const groups = {};
+  for (const block of extractScriptBlocks(text, 'city_group')) {
+    const colorIndex = parseInt(block.match(/color_index\s*=\s*(-?\d+)/)?.[1] ?? '-1', 10);
+    if (!Number.isFinite(colorIndex) || colorIndex < 0) continue;
+
+    const density = parseFloat(block.match(/density\s*=\s*([-+]?\d*\.?\d+)/)?.[1] ?? '0');
+    const buildings = [];
+
+    for (const b of extractScriptBlocks(block, 'building')) {
+      const distance = parseInt(b.match(/distance\s*=\s*(-?\d+)/)?.[1] ?? '1', 10);
+      const meshBlock = extractScriptBlocks(b, 'mesh')[0] ?? '';
+      const meshes = [...meshBlock.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+      if (meshes.length > 0) {
+        buildings.push({
+          distance: Number.isFinite(distance) ? distance : 1,
+          meshes,
+        });
+      }
+    }
+
+    buildings.sort((a, b) => a.distance - b.distance);
+    groups[colorIndex] = { colorIndex, density: Number.isFinite(density) ? density : 0, buildings };
+  }
+
+  return {
+    typesSource,
+    pixelStepX,
+    pixelStepY,
+    groups,
+  };
+}
+
 // ===== 1. 转换 heightmap =====
 async function convertHeightmap() {
   const inputPath = path.join(MAP_DIR, 'heightmap.bmp');
   const outputPath = path.join(OUTPUT_DIR, 'heightmap.png');
 
-  console.log('[1/5] 正在转换 heightmap.bmp → heightmap.png ...');
+  console.log('[1/10] 正在转换 heightmap.bmp → heightmap.png ...');
 
   const bmp = parseBMP(inputPath);
 
@@ -250,7 +528,7 @@ async function convertProvinceMap() {
   const inputPath = path.join(MAP_DIR, 'provinces.bmp');
   const outputPath = path.join(OUTPUT_DIR, 'provinces.png');
 
-  console.log('[2/5] 正在转换 provinces.bmp → provinces.png ...');
+  console.log('[2/10] 正在转换 provinces.bmp → provinces.png ...');
 
   const bmp = parseBMP(inputPath);
 
@@ -269,7 +547,7 @@ async function convertRiversMap() {
   const inputPath = path.join(MAP_DIR, 'rivers.bmp');
   const outputPath = path.join(OUTPUT_DIR, 'rivers.png');
 
-  console.log('[3/5] 正在转换 rivers.bmp → rivers.png ...');
+  console.log('[3/10] 正在转换 rivers.bmp → rivers.png ...');
 
   const bmp = parseBMP(inputPath);
 
@@ -283,12 +561,72 @@ async function convertRiversMap() {
   return { width: bmp.width, height: bmp.height };
 }
 
-// ===== 4. 解析 definition.csv =====
+// ===== 4. 转换 HOI4 原版地形色图（陆地） =====
+async function convertTerrainColormap() {
+  const inputPath = TERRAIN_COLORMAP_DDS_FILE;
+  const outputPath = path.join(OUTPUT_DIR, 'terrain_colormap.png');
+
+  console.log('[4/10] 正在转换 colormap_rgb_cityemissivemask_a.dds → terrain_colormap.png ...');
+
+  const dds = parseDDS(inputPath);
+  const opaquePixels = forceOpaqueRgba(dds.pixels);
+
+  await sharp(opaquePixels, {
+    raw: { width: dds.width, height: dds.height, channels: dds.channels },
+  })
+    .png({ compressionLevel: 6 })
+    .toFile(outputPath);
+
+  console.log(`  ✅ 已保存 ${dds.width}x${dds.height} (${dds.format}) → ${outputPath}`);
+  return { width: dds.width, height: dds.height };
+}
+
+// ===== 5. 转换 HOI4 原版水体色图 =====
+async function convertWaterColormap() {
+  const inputPath = path.join(MAP_TERRAIN_DIR, 'colormap_water_0.dds');
+  const outputPath = path.join(OUTPUT_DIR, 'terrain_water.png');
+
+  console.log('[5/10] 正在转换 colormap_water_0.dds → terrain_water.png ...');
+
+  const dds = parseDDS(inputPath);
+  const opaquePixels = forceOpaqueRgba(dds.pixels);
+
+  await sharp(opaquePixels, {
+    raw: { width: dds.width, height: dds.height, channels: dds.channels },
+  })
+    .png({ compressionLevel: 6 })
+    .toFile(outputPath);
+
+  console.log(`  ✅ 已保存 ${dds.width}x${dds.height} (${dds.format}) → ${outputPath}`);
+  return { width: dds.width, height: dds.height };
+}
+
+// ===== 6. 转换城市灯光掩码（colormap alpha） =====
+async function convertCityLights() {
+  const inputPath = TERRAIN_COLORMAP_DDS_FILE;
+  const outputPath = path.join(OUTPUT_DIR, 'city_lights.png');
+
+  console.log('[6/10] 正在提取城市灯光掩码 colormap alpha → city_lights.png ...');
+
+  const dds = parseDDS(inputPath);
+  const gray = extractAlphaToGray(dds.pixels);
+
+  await sharp(gray, {
+    raw: { width: dds.width, height: dds.height, channels: 1 },
+  })
+    .png({ compressionLevel: 6 })
+    .toFile(outputPath);
+
+  console.log(`  ✅ 已保存 ${dds.width}x${dds.height} → ${outputPath}`);
+  return { width: dds.width, height: dds.height };
+}
+
+// ===== 7. 解析 definition.csv =====
 function parseDefinition() {
   const inputPath = path.join(MAP_DIR, 'definition.csv');
   const outputPath = path.join(OUTPUT_DIR, 'provinces.json');
 
-  console.log('[4/5] 正在解析 definition.csv ...');
+  console.log('[7/10] 正在解析 definition.csv ...');
 
   const content = fs.readFileSync(inputPath, 'utf-8');
   const lines = content.split('\n').filter(l => l.trim());
@@ -326,7 +664,187 @@ function parseDefinition() {
   return provinces;
 }
 
-// ===== 4. 解析中文本地化 =====
+// ===== 9. 解析城市分布（cities.bmp + cities.txt） =====
+function parseCitiesData() {
+  const outputPath = path.join(OUTPUT_DIR, 'cities.json');
+
+  console.log('[9/10] 正在解析 cities.bmp + cities.txt ...');
+
+  if (!fs.existsSync(CITIES_BMP_FILE) || !fs.existsSync(CITIES_TXT_FILE)) {
+    console.log('  ⚠️ cities.bmp 或 cities.txt 不存在，跳过');
+    const fallback = { width: 0, height: 0, instanceCount: 0, instances: [] };
+    fs.writeFileSync(outputPath, JSON.stringify(fallback));
+    return fallback;
+  }
+
+  const config = parseCitiesConfig(CITIES_TXT_FILE);
+  const bmp = parseBMPIndexed(CITIES_BMP_FILE);
+  const rand = mulberry32(20260226);
+
+  const stepX = Math.max(1, config.pixelStepX || 1);
+  const stepY = Math.max(1, config.pixelStepY || 1);
+  const MAX_CITY_INSTANCES = 180000;
+
+  const compiledGroups = new Map();
+  for (const group of Object.values(config.groups)) {
+    if (!group || !Array.isArray(group.buildings) || group.buildings.length === 0) continue;
+
+    const density = Math.max(0, group.density || 0);
+    if (density <= 0) continue;
+
+    const entries = [];
+    let totalWeight = 0;
+
+    for (const b of group.buildings) {
+      const w = Math.max(1, Number.isFinite(b.distance) ? b.distance : 1);
+      for (const meshName of b.meshes || []) {
+        entries.push({
+          mesh: meshName,
+          distance: Number.isFinite(b.distance) ? b.distance : 1,
+          weight: w,
+        });
+        totalWeight += w;
+      }
+    }
+
+    if (entries.length > 0 && totalWeight > 0) {
+      compiledGroups.set(group.colorIndex, {
+        density,
+        entries,
+        totalWeight,
+      });
+    }
+  }
+
+  const instances = [];
+  const meshHistogram = {};
+
+  outer:
+  for (let y = 0; y < bmp.height; y += stepY) {
+    for (let x = 0; x < bmp.width; x += stepX) {
+      const idx = bmp.indices[y * bmp.width + x];
+      const group = compiledGroups.get(idx);
+      if (!group) continue;
+
+      const probability = Math.max(0, Math.min(1, group.density));
+      if (rand() > probability) continue;
+
+      let pick = rand() * group.totalWeight;
+      let chosen = group.entries[group.entries.length - 1];
+      for (const e of group.entries) {
+        pick -= e.weight;
+        if (pick <= 0) {
+          chosen = e;
+          break;
+        }
+      }
+
+      const jitterX = (rand() - 0.5) * stepX;
+      const jitterY = (rand() - 0.5) * stepY;
+      const rotation = rand() * Math.PI * 2;
+      const scale = 0.85 + rand() * 0.30;
+
+      instances.push({
+        x: Number((x + jitterX).toFixed(4)),
+        y: Number((y + jitterY).toFixed(4)),
+        colorIndex: idx,
+        mesh: chosen.mesh,
+        distance: chosen.distance,
+        rotation: Number(rotation.toFixed(6)),
+        scale: Number(scale.toFixed(4)),
+      });
+
+      meshHistogram[chosen.mesh] = (meshHistogram[chosen.mesh] || 0) + 1;
+
+      if (instances.length >= MAX_CITY_INSTANCES) {
+        console.log(`  ⚠️ 城市实例达到上限 ${MAX_CITY_INSTANCES}，已截断`);
+        break outer;
+      }
+    }
+  }
+
+  const result = {
+    width: bmp.width,
+    height: bmp.height,
+    typesSource: config.typesSource,
+    pixelStepX: stepX,
+    pixelStepY: stepY,
+    groupCount: Object.keys(config.groups).length,
+    instanceCount: instances.length,
+    meshHistogram,
+    instances,
+  };
+
+  fs.writeFileSync(outputPath, JSON.stringify(result));
+  console.log(`  城市实例: ${instances.length}, 网格类型: ${Object.keys(meshHistogram).length}`);
+  console.log(`  ✅ 已保存到 ${outputPath}`);
+  return result;
+}
+
+// ===== 10. 解析建筑实例（buildings.txt） =====
+function parseBuildingsData() {
+  const outputPath = path.join(OUTPUT_DIR, 'buildings.json');
+
+  console.log('[10/10] 正在解析 buildings.txt ...');
+
+  if (!fs.existsSync(BUILDINGS_FILE)) {
+    console.log('  ⚠️ buildings.txt 不存在，跳过');
+    const fallback = { count: 0, typeCounts: {}, items: [] };
+    fs.writeFileSync(outputPath, JSON.stringify(fallback));
+    return fallback;
+  }
+
+  const lines = fs.readFileSync(BUILDINGS_FILE, 'utf-8').split(/\r?\n/);
+  const items = [];
+  const typeCounts = {};
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    const parts = line.split(';');
+    if (parts.length < 7) continue;
+
+    const stateId = parseInt(parts[0], 10);
+    const type = parts[1].trim();
+    const x = parseFloat(parts[2]);
+    const y = parseFloat(parts[3]);
+    const z = parseFloat(parts[4]);
+    const rotation = parseFloat(parts[5]);
+
+    const extraRaw = (parts[6] ?? '0').trim();
+    const extraNum = parseFloat(extraRaw);
+    const extra = Number.isFinite(extraNum) ? extraNum : extraRaw;
+
+    if (!Number.isFinite(stateId) || !type) continue;
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z) || !Number.isFinite(rotation)) continue;
+
+    items.push({
+      stateId,
+      type,
+      x,
+      y,
+      z,
+      rotation,
+      extra,
+    });
+
+    typeCounts[type] = (typeCounts[type] || 0) + 1;
+  }
+
+  const result = {
+    count: items.length,
+    typeCounts,
+    items,
+  };
+
+  fs.writeFileSync(outputPath, JSON.stringify(result));
+  console.log(`  建筑实例: ${items.length}, 类型数: ${Object.keys(typeCounts).length}`);
+  console.log(`  ✅ 已保存到 ${outputPath}`);
+  return result;
+}
+
+// ===== 8. 解析中文本地化 =====
 function parseLocalization() {
   const LOC_DIR = path.join(HOI4_DIR, 'localisation', 'simp_chinese');
   const stateNamesFile = path.join(LOC_DIR, 'state_names_l_simp_chinese.yml');
@@ -383,7 +901,7 @@ function parseLocalization() {
   return { stateNames, countryNames, strategicRegionNames };
 }
 
-// ===== 5. 解析 Strategic Regions（海域/大战区） =====
+// ===== 8.1 解析 Strategic Regions（海域/大战区） =====
 function parseStrategicRegions(strategicRegionNames = {}) {
   const strategicRegions = {};
   const provinceToStrategicRegion = {};
@@ -433,11 +951,11 @@ function parseStrategicRegions(strategicRegionNames = {}) {
   return { strategicRegions, provinceToStrategicRegion };
 }
 
-// ===== 6. 解析 states（增强版）=====
+// ===== 8.2 解析 states（增强版）=====
 function parseStates() {
   const outputPath = path.join(OUTPUT_DIR, 'states.json');
 
-  console.log('[5/5] 正在解析 states 目录（增强版）...');
+  console.log('[8/10] 正在解析 states 目录（增强版）...');
 
   // 先加载本地化数据
   console.log('  正在加载中文本地化...');
@@ -592,10 +1110,17 @@ async function main() {
   const hInfo = await convertHeightmap();
   const pInfo = await convertProvinceMap();
   const rInfo = await convertRiversMap();
+  const terrainInfo = await convertTerrainColormap();
+  const waterInfo = await convertWaterColormap();
+  const cityLightsInfo = await convertCityLights();
   parseDefinition();
   parseStates();
+  const citiesInfo = parseCitiesData();
+  const buildingsInfo = parseBuildingsData();
 
-  console.log(`\n==== 完成！heightmap: ${hInfo.width}x${hInfo.height}, provinces: ${pInfo.width}x${pInfo.height}, rivers: ${rInfo.width}x${rInfo.height} ====`);
+  console.log(
+    `\n==== 完成！heightmap: ${hInfo.width}x${hInfo.height}, provinces: ${pInfo.width}x${pInfo.height}, rivers: ${rInfo.width}x${rInfo.height}, terrain_colormap: ${terrainInfo.width}x${terrainInfo.height}, terrain_water: ${waterInfo.width}x${waterInfo.height}, city_lights: ${cityLightsInfo.width}x${cityLightsInfo.height}, city_instances: ${citiesInfo.instanceCount}, building_instances: ${buildingsInfo.count} ====`
+  );
 }
 
 main().catch(console.error);

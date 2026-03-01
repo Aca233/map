@@ -28,6 +28,12 @@ export class UIManager {
 
   /** 地图模式切换回调 */
   public onMapModeChange: ((mode: number) => void) | null = null;
+  /** 城市散布显隐切换回调 */
+  public onCityScatterVisibilityChange: ((visible: boolean) => void) | null = null;
+  /** 建筑显隐切换回调 */
+  public onBuildingsVisibilityChange: ((visible: boolean) => void) | null = null;
+  /** 城市灯光显隐切换回调 */
+  public onCityLightsVisibilityChange: ((visible: boolean) => void) | null = null;
 
   // FPS 计算
   private frameCount = 0;
@@ -54,6 +60,7 @@ export class UIManager {
     this.fpsCounter = document.getElementById('fps-counter')!;
 
     this.setupMapModeButtons();
+    this.setupLayerToggles();
   }
 
   private setupMapModeButtons(): void {
@@ -77,6 +84,44 @@ export class UIManager {
     });
   }
 
+  private setupLayerToggles(): void {
+    const cityScatterToggle = document.getElementById('toggle-city-scatter') as HTMLInputElement | null;
+    if (cityScatterToggle) {
+      cityScatterToggle.addEventListener('change', () => {
+        if (this.onCityScatterVisibilityChange) {
+          this.onCityScatterVisibilityChange(cityScatterToggle.checked);
+        }
+      });
+      if (this.onCityScatterVisibilityChange) {
+        this.onCityScatterVisibilityChange(cityScatterToggle.checked);
+      }
+    }
+
+    const buildingsToggle = document.getElementById('toggle-buildings') as HTMLInputElement | null;
+    if (buildingsToggle) {
+      buildingsToggle.addEventListener('change', () => {
+        if (this.onBuildingsVisibilityChange) {
+          this.onBuildingsVisibilityChange(buildingsToggle.checked);
+        }
+      });
+      if (this.onBuildingsVisibilityChange) {
+        this.onBuildingsVisibilityChange(buildingsToggle.checked);
+      }
+    }
+
+    const cityLightsToggle = document.getElementById('toggle-city-lights') as HTMLInputElement | null;
+    if (cityLightsToggle) {
+      cityLightsToggle.addEventListener('change', () => {
+        if (this.onCityLightsVisibilityChange) {
+          this.onCityLightsVisibilityChange(cityLightsToggle.checked);
+        }
+      });
+      if (this.onCityLightsVisibilityChange) {
+        this.onCityLightsVisibilityChange(cityLightsToggle.checked);
+      }
+    }
+  }
+
   /** 显示悬浮提示 */
   showTooltip(
     province: ProvinceData,
@@ -85,18 +130,26 @@ export class UIManager {
     mouseX: number,
     mouseY: number
   ): void {
+    const isSeaProvince = province.type === 'sea' || province.type === 'lake';
     const country = this.store.getCountry(province.owner);
     const countryName = country ? country.name : province.owner;
-    const stateName = state ? state.localName : (province.stateName || '');
-    const regionName = strategicRegion ? strategicRegion.localName : (province.strategicRegionName || '');
+
+    // 陆地优先 State；海域优先 Strategic Region
+    const stateName = !isSeaProvince
+      ? (state?.localName || province.stateName || '')
+      : '';
+    const regionName = isSeaProvince
+      ? (strategicRegion?.localName || province.strategicRegionName || '')
+      : '';
 
     let text = '';
-    if (province.type === 'sea' || province.type === 'lake') {
-      text = regionName ? `${regionName} · ${countryName}` : `${province.name} (${countryName})`;
+    if (isSeaProvince) {
+      const seaTitle = regionName || province.name;
+      text = `${seaTitle} · ${countryName}`;
     } else if (stateName) {
       text = `${stateName} · ${countryName}`;
     } else {
-      text = `${province.name} (${countryName})`;
+      text = `${province.name} · ${countryName}`;
     }
 
     this.tooltip.textContent = text;
@@ -112,13 +165,21 @@ export class UIManager {
 
   /** 显示选中地块的信息面板 */
   showPanel(province: ProvinceData, state: StateData | null, strategicRegion: StrategicRegionData | null): void {
+    const isSeaProvince = province.type === 'sea' || province.type === 'lake';
     const country = this.store.getCountry(province.owner);
 
-    // 标题优先显示海域名（海洋）/State名（陆地）
-    if ((province.type === 'sea' || province.type === 'lake') && strategicRegion) {
-      this.panelTitle.textContent = strategicRegion.localName;
+    const stateName = !isSeaProvince
+      ? (state?.localName || province.stateName || '--')
+      : '--';
+    const regionName = isSeaProvince
+      ? (strategicRegion?.localName || province.strategicRegionName || '--')
+      : '--';
+
+    // 标题优先：海域 -> Strategic Region；陆地 -> State
+    if (isSeaProvince) {
+      this.panelTitle.textContent = regionName !== '--' ? regionName : province.name;
     } else {
-      this.panelTitle.textContent = state ? state.localName : province.name;
+      this.panelTitle.textContent = stateName !== '--' ? stateName : province.name;
     }
 
     this.panelId.textContent = `#${province.id}`;
@@ -135,8 +196,8 @@ export class UIManager {
       this.panelCountryColor.style.backgroundColor = '#666';
     }
 
-    // State 信息
-    if (state) {
+    // State 信息（仅陆地展示有效值）
+    if (!isSeaProvince && state) {
       this.panelStateName.textContent = state.localName;
       this.panelStateCategory.textContent = this.translateCategory(state.category);
       this.panelStateManpower.textContent = state.manpower > 0
@@ -150,20 +211,14 @@ export class UIManager {
           }).join(', ')
         : '--';
     } else {
-      this.panelStateName.textContent = '--';
+      this.panelStateName.textContent = stateName;
       this.panelStateCategory.textContent = '--';
       this.panelStateManpower.textContent = '--';
       this.panelStateCores.textContent = '--';
     }
 
-    // 海域信息
-    if (strategicRegion) {
-      this.panelStrategicRegion.textContent = strategicRegion.localName;
-    } else if (province.strategicRegionName) {
-      this.panelStrategicRegion.textContent = province.strategicRegionName;
-    } else {
-      this.panelStrategicRegion.textContent = '--';
-    }
+    // 海域信息（仅海域展示有效值）
+    this.panelStrategicRegion.textContent = regionName;
 
     this.panel.classList.add('visible');
   }
