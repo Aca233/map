@@ -1472,6 +1472,12 @@ async function main() {
   ui.onMapModeChange = (mode) => {
     terrainManager.setMapMode(mode);
   };
+  ui.setCurrentMapModeLabel(0);
+  ui.updateRuntimeHud(
+    simulationClock.getTick(),
+    simulationClock.getElapsedSimulationSeconds(),
+    simulationClock.getFixedStepSeconds(),
+  );
 
   ui.onCityScatterVisibilityChange = (visible) => {
     cityScatterGroup.visible = visible;
@@ -1510,7 +1516,9 @@ async function main() {
     mouseDownPickBlocked =
       !!target.closest('#province-panel') ||
       !!target.closest('#map-mode-bar') ||
-      !!target.closest('#layer-toggles');
+      !!target.closest('#layer-toggles') ||
+      !!target.closest('#hud-top-bar') ||
+      !!target.closest('#hud-bottom-strip');
   });
 
   window.addEventListener('mousemove', (e) => {
@@ -1684,6 +1692,11 @@ async function main() {
     }
 
     ui.updateFPS(timestamp);
+    ui.updateRuntimeHud(
+      simulationClock.getTick(),
+      simulationClock.getElapsedSimulationSeconds(),
+      simulationClock.getFixedStepSeconds(),
+    );
     if (fxaaPass.enabled) {
       composer.render();
     } else {

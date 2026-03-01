@@ -9,8 +9,27 @@
 </head>
 <body>
   <div id="app">
-    <div id="fps-counter">FPS: --</div>
+    <div id="hud-top-bar" class="hud-shell hud-shell-top">
+      <div class="hud-top-left">
+        <div class="hud-chip hud-chip-fps" id="fps-counter">FPS: --</div>
+        <div class="hud-chip">模式: <span id="hud-map-mode">政治</span></div>
+      </div>
+      <div class="hud-top-center">
+        <div class="hud-resource-strip" role="presentation">
+          <span class="resource-pill">政治点数 120</span>
+          <span class="resource-pill">人力 1.20M</span>
+          <span class="resource-pill">工厂 58/43</span>
+          <span class="resource-pill">补给 98%</span>
+        </div>
+      </div>
+      <div class="hud-top-right">
+        <div class="hud-chip">Tick <span id="hud-runtime-tick">0</span></div>
+        <div class="hud-chip">时间 <span id="hud-runtime-time">00:00:00</span></div>
+      </div>
+    </div>
+
     <div id="tooltip"></div>
+
     <div id="province-panel">
       <h3 id="panel-title">地块名称</h3>
       <div class="info-row">
@@ -53,26 +72,36 @@
         <span class="info-value" id="panel-population">--</span>
       </div>
     </div>
-    <div id="map-mode-bar">
-      <button class="map-mode-btn active" data-mode="political">政治</button>
-      <button class="map-mode-btn" data-mode="state">行政区</button>
-      <button class="map-mode-btn" data-mode="terrain">地形</button>
-      <button class="map-mode-btn" data-mode="heightmap">高度</button>
-    </div>
 
-    <div id="layer-toggles">
-      <label class="layer-toggle-row">
-        <input id="toggle-city-scatter" type="checkbox" checked />
-        <span>城市散布</span>
-      </label>
-      <label class="layer-toggle-row">
-        <input id="toggle-buildings" type="checkbox" checked />
-        <span>建筑</span>
-      </label>
-      <label class="layer-toggle-row">
-        <input id="toggle-city-lights" type="checkbox" checked />
-        <span>城市灯光</span>
-      </label>
+    <div id="hud-bottom-strip" class="hud-shell hud-shell-bottom">
+      <div class="hud-bottom-left">
+        <div class="hud-chip">固定步长 <span id="hud-runtime-step">0.200s</span></div>
+      </div>
+
+      <div id="map-mode-bar">
+        <button class="map-mode-btn active" data-mode="political">政治</button>
+        <button class="map-mode-btn" data-mode="state">行政区</button>
+        <button class="map-mode-btn" data-mode="terrain">地形</button>
+        <button class="map-mode-btn" data-mode="heightmap">高度</button>
+      </div>
+
+      <div class="hud-bottom-right">
+        <div id="layer-toggles">
+          <label class="layer-toggle-row">
+            <input id="toggle-city-scatter" type="checkbox" checked />
+            <span>城市散布</span>
+          </label>
+          <label class="layer-toggle-row">
+            <input id="toggle-buildings" type="checkbox" checked />
+            <span>建筑</span>
+          </label>
+          <label class="layer-toggle-row">
+            <input id="toggle-city-lights" type="checkbox" checked />
+            <span>城市灯光</span>
+          </label>
+        </div>
+        <div class="hud-chip hud-hint" id="hud-shortcut-hint">WASD 移动 · 鼠标拖拽旋转</div>
+      </div>
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>

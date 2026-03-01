@@ -24,6 +24,12 @@ export class UIManager {
   private tooltip: HTMLElement;
   private fpsCounter: HTMLElement;
 
+  private hudMapModeLabel: HTMLElement | null;
+  private hudRuntimeTick: HTMLElement | null;
+  private hudRuntimeTime: HTMLElement | null;
+  private hudRuntimeStep: HTMLElement | null;
+  private hudShortcutHint: HTMLElement | null;
+
   private store: ProvinceStore;
 
   /** 地图模式切换回调 */
@@ -59,8 +65,16 @@ export class UIManager {
     this.tooltip = document.getElementById('tooltip')!;
     this.fpsCounter = document.getElementById('fps-counter')!;
 
+    this.hudMapModeLabel = document.getElementById('hud-map-mode');
+    this.hudRuntimeTick = document.getElementById('hud-runtime-tick');
+    this.hudRuntimeTime = document.getElementById('hud-runtime-time');
+    this.hudRuntimeStep = document.getElementById('hud-runtime-step');
+    this.hudShortcutHint = document.getElementById('hud-shortcut-hint');
+
     this.setupMapModeButtons();
     this.setupLayerToggles();
+    this.setCurrentMapModeLabel(0);
+    this.updateRuntimeHud(0, 0, 0.2);
   }
 
   private setupMapModeButtons(): void {
@@ -76,6 +90,8 @@ export class UIManager {
         if (mode === 'terrain') modeIndex = 1;
         else if (mode === 'heightmap') modeIndex = 2;
         else if (mode === 'state') modeIndex = 3;
+
+        this.setCurrentMapModeLabel(modeIndex);
 
         if (this.onMapModeChange) {
           this.onMapModeChange(modeIndex);
@@ -119,6 +135,44 @@ export class UIManager {
       if (this.onCityLightsVisibilityChange) {
         this.onCityLightsVisibilityChange(cityLightsToggle.checked);
       }
+    }
+  }
+
+  public setCurrentMapModeLabel(modeIndex: number): void {
+    if (!this.hudMapModeLabel) return;
+
+    const modeNameMap: Record<number, string> = {
+      0: '政治',
+      1: '地形',
+      2: '高度',
+      3: '行政区',
+    };
+
+    this.hudMapModeLabel.textContent = modeNameMap[modeIndex] ?? `模式 ${modeIndex}`;
+  }
+
+  public updateRuntimeHud(tick: number, elapsedSeconds: number, fixedStepSeconds: number): void {
+    if (this.hudRuntimeTick) {
+      this.hudRuntimeTick.textContent = `${Math.max(0, Math.floor(tick))}`;
+    }
+
+    if (this.hudRuntimeTime) {
+      const safeSeconds = Math.max(0, elapsedSeconds);
+      const totalSeconds = Math.floor(safeSeconds);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      this.hudRuntimeTime.textContent = `${hours.toString().padStart(2, '0')}:${minutes
+        .toString()
+        .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    if (this.hudRuntimeStep) {
+      this.hudRuntimeStep.textContent = `${Math.max(0, fixedStepSeconds).toFixed(3)}s`;
+    }
+
+    if (this.hudShortcutHint && this.hudShortcutHint.textContent?.trim().length === 0) {
+      this.hudShortcutHint.textContent = 'WASD 移动 · 鼠标拖拽旋转';
     }
   }
 
