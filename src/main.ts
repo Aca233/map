@@ -1465,7 +1465,10 @@ async function main() {
     isDragging = false;
 
     const target = e.target as HTMLElement;
-    mouseDownPickBlocked = !!target.closest('#province-panel') || !!target.closest('#map-mode-bar');
+    mouseDownPickBlocked =
+      !!target.closest('#province-panel') ||
+      !!target.closest('#map-mode-bar') ||
+      !!target.closest('#layer-toggles');
   });
 
   window.addEventListener('mousemove', (e) => {
