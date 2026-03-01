@@ -14,6 +14,15 @@ import { ProvinceStore } from './data/ProvinceStore';
 import { TerrainManager, TERRAIN_TOTAL_SEGS_X, TERRAIN_TOTAL_SEGS_Z } from './terrain/TerrainManager';
 import { ProvincePicker } from './interaction/ProvincePicker';
 import { UIManager } from './ui/UIManager';
+import {
+  OwnershipSystem,
+  RuntimeStore,
+  SimulationClock,
+  StateEconomySystem,
+  SupplySystem,
+} from './runtime';
+import { SaveManager } from './persistence';
+import './styles.css';
 import cityHouseObjRaw from '../outputs/pdmesh/city_4_01.obj?raw';
 
 interface CityScatterData {
@@ -1131,7 +1140,19 @@ async function main() {
   const store = new ProvinceStore();
   await store.loadFromHOI4Data();
 
-  // 2. 加载纹理图片
+  // 2. 初始化运行时与持久化（在 ProvinceStore 就绪后）
+  const runtimeStore = RuntimeStore.fromProvinceStore(store);
+  const simulationClock = new SimulationClock({
+    fixedStepSeconds: 0.2,
+    maxStepsPerFrame: 6,
+    maxFrameDeltaSeconds: 0.5,
+  });
+  const ownershipSystem = new OwnershipSystem();
+  const stateEconomySystem = new StateEconomySystem();
+  const supplySystem = new SupplySystem();
+  const saveManager = new SaveManager(runtimeStore, simulationClock, 'main-runtime');
+
+  // 3. 加载纹理图片
   console.log('[Map] 正在加载纹理...');
   const [heightmapImg, provincesImg, riversImg, terrainColormapImg, waterColormapImg, cityLightsImg] = await Promise.all([
     loadImage(assetUrl('heightmap.png')),
@@ -1251,7 +1272,28 @@ async function main() {
   const IDLE_PICK_INTERVAL = 0.20; // 秒
 
   window.addEventListener('keydown', (e) => {
-    keysPressed.add(e.key.toLowerCase());
+    const keyLower = e.key.toLowerCase();
+
+    if ((e.ctrlKey || e.metaKey) && keyLower === 's') {
+      e.preventDefault();
+      const snapshot = saveManager.save();
+      console.log(`[Runtime] 已保存运行时快照: tick=${snapshot.runtime.tick}, at=${snapshot.createdAt}`);
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && keyLower === 'l') {
+      e.preventDefault();
+      const loadedSnapshot = saveManager.load();
+      if (loadedSnapshot) {
+        runtimeStore.setTick(simulationClock.getTick());
+        console.log(`[Runtime] 已加载运行时快照: tick=${loadedSnapshot.runtime.tick}, at=${loadedSnapshot.createdAt}`);
+      } else {
+        console.warn('[Runtime] 未找到可加载的运行时快照或快照无效');
+      }
+      return;
+    }
+
+    keysPressed.add(keyLower);
   });
   window.addEventListener('keyup', (e) => {
     keysPressed.delete(e.key.toLowerCase());
@@ -1523,6 +1565,14 @@ async function main() {
     const timestamp = performance.now();
     const deltaTime = (timestamp - lastFrameTime) / 1000; // 秒
     lastFrameTime = timestamp;
+
+    const runtimeTicks = simulationClock.advance(deltaTime);
+    for (const tickContext of runtimeTicks) {
+      runtimeStore.setTick(tickContext.tick);
+      ownershipSystem.update(runtimeStore, tickContext);
+      stateEconomySystem.update(runtimeStore, tickContext);
+      supplySystem.update(runtimeStore, tickContext);
+    }
 
     // WASD 键盘移动
     if (keysPressed.size > 0) {
