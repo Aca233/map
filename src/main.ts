@@ -14,15 +14,8 @@ import { ProvinceStore } from './data/ProvinceStore';
 import { TerrainManager, TERRAIN_TOTAL_SEGS_X, TERRAIN_TOTAL_SEGS_Z } from './terrain/TerrainManager';
 import { ProvincePicker } from './interaction/ProvincePicker';
 import { UIManager } from './ui/UIManager';
-import {
-  OwnershipSystem,
-  RuntimeStore,
-  SimulationClock,
-  StateEconomySystem,
-  SupplySystem,
-} from './runtime';
-import { SaveManager } from './persistence';
-import './styles.css';
+import { GameStateManager } from './game/GameStateManager';
+import { MainMenuManager } from './ui/MainMenuManager';
 import cityHouseObjRaw from '../outputs/pdmesh/city_4_01.obj?raw';
 
 interface CityScatterData {
@@ -53,6 +46,14 @@ interface BuildingsData {
     extra: number | string;
   }>;
 }
+
+interface StateBuildings1936Data {
+  stateCount: number;
+  typeLevelTotals: Record<string, number>;
+  byState: Record<string, Record<string, number>>;
+}
+
+type StateCitySummary = Record<number, { count: number; top: Array<{ name: string; value: number }> }>;
 
 type HeightSampler = (px: number, py: number) => number;
 type ProvinceColorSampler = (px: number, py: number) => number;
@@ -550,6 +551,55 @@ function createProvinceColorSampler(provinceCanvas: HTMLCanvasElement): Province
     const idx = (y * w + x) * 4;
     return (data[idx] << 16) | (data[idx + 1] << 8) | data[idx + 2];
   };
+}
+
+function buildStateCitySummary(
+  citiesData: CityScatterData,
+  provinceCanvas: HTMLCanvasElement,
+  store: ProvinceStore
+): StateCitySummary {
+  const w = provinceCanvas.width;
+  const h = provinceCanvas.height;
+  const ctx = provinceCanvas.getContext('2d', { willReadFrequently: true })!;
+  const data = ctx.getImageData(0, 0, w, h).data;
+
+  const cityCountByState = new Map<number, number>();
+  const cityTypeCountByState = new Map<number, Map<string, number>>();
+
+  for (const instance of citiesData.instances || []) {
+    const xRaw = Math.floor(instance.x);
+    const x = ((xRaw % w) + w) % w;
+    const canvasY = mapDataYToCanvasY(instance.y, h);
+    const y = Math.max(0, Math.min(h - 1, Math.floor(canvasY)));
+
+    const idx = (y * w + x) * 4;
+    const province = store.getProvinceByColor(data[idx], data[idx + 1], data[idx + 2]);
+    const stateId = province?.stateId;
+    if (!stateId) continue;
+
+    cityCountByState.set(stateId, (cityCountByState.get(stateId) || 0) + 1);
+
+    const key = instance.mesh || 'city';
+    let stateTypes = cityTypeCountByState.get(stateId);
+    if (!stateTypes) {
+      stateTypes = new Map<string, number>();
+      cityTypeCountByState.set(stateId, stateTypes);
+    }
+    stateTypes.set(key, (stateTypes.get(key) || 0) + 1);
+  }
+
+  const result: StateCitySummary = {};
+  for (const [stateId, count] of cityCountByState) {
+    const typeCounts = cityTypeCountByState.get(stateId) || new Map<string, number>();
+    const top = Array.from(typeCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([name, value]) => ({ name, value }));
+
+    result[stateId] = { count, top };
+  }
+
+  return result;
 }
 
 function isFootprintMostlyInsideProvince(
@@ -1139,20 +1189,11 @@ async function main() {
   // 1. 创建数据仓库并加载 HOI4 数据
   const store = new ProvinceStore();
   await store.loadFromHOI4Data();
+  console.log(
+    `[Map] 数据索引就绪: provinces=${store.getAllProvinces().length}, states=${store.getAllStates().length}, countries=${store.getLandCountries().length}, strategicRegions=${store.getAllStrategicRegions().length}`
+  );
 
-  // 2. 初始化运行时与持久化（在 ProvinceStore 就绪后）
-  const runtimeStore = RuntimeStore.fromProvinceStore(store);
-  const simulationClock = new SimulationClock({
-    fixedStepSeconds: 0.2,
-    maxStepsPerFrame: 6,
-    maxFrameDeltaSeconds: 0.5,
-  });
-  const ownershipSystem = new OwnershipSystem();
-  const stateEconomySystem = new StateEconomySystem();
-  const supplySystem = new SupplySystem();
-  const saveManager = new SaveManager(runtimeStore, simulationClock, 'main-runtime');
-
-  // 3. 加载纹理图片
+  // 2. 加载纹理图片
   console.log('[Map] 正在加载纹理...');
   const [heightmapImg, provincesImg, riversImg, terrainColormapImg, waterColormapImg, cityLightsImg] = await Promise.all([
     loadImage(assetUrl('heightmap.png')),
@@ -1199,7 +1240,7 @@ async function main() {
     0.1,
     2000
   );
-  camera.position.set(0, 180, 180);
+  camera.position.set(0, 300, 300); // 初始视角拉远，作为主菜单背景
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({
@@ -1235,7 +1276,7 @@ async function main() {
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   controls.screenSpacePanning = true;
-  controls.minDistance = 5;
+  controls.minDistance = 2;
   controls.maxDistance = 700;
   controls.minPolarAngle = 0.1;
   controls.maxPolarAngle = Math.PI / 2.2;
@@ -1272,28 +1313,7 @@ async function main() {
   const IDLE_PICK_INTERVAL = 0.20; // 秒
 
   window.addEventListener('keydown', (e) => {
-    const keyLower = e.key.toLowerCase();
-
-    if ((e.ctrlKey || e.metaKey) && keyLower === 's') {
-      e.preventDefault();
-      const snapshot = saveManager.save();
-      console.log(`[Runtime] 已保存运行时快照: tick=${snapshot.runtime.tick}, at=${snapshot.createdAt}`);
-      return;
-    }
-
-    if ((e.ctrlKey || e.metaKey) && keyLower === 'l') {
-      e.preventDefault();
-      const loadedSnapshot = saveManager.load();
-      if (loadedSnapshot) {
-        runtimeStore.setTick(simulationClock.getTick());
-        console.log(`[Runtime] 已加载运行时快照: tick=${loadedSnapshot.runtime.tick}, at=${loadedSnapshot.createdAt}`);
-      } else {
-        console.warn('[Runtime] 未找到可加载的运行时快照或快照无效');
-      }
-      return;
-    }
-
-    keysPressed.add(keyLower);
+    keysPressed.add(e.key.toLowerCase());
   });
   window.addEventListener('keyup', (e) => {
     keysPressed.delete(e.key.toLowerCase());
@@ -1401,12 +1421,15 @@ async function main() {
   console.log('[Map] 地形创建完毕');
 
   // ===== 城市建筑（InstancedMesh） =====
-  const [citiesData, buildingsData] = await Promise.all([
+  const [citiesData, buildingsData, stateBuildings1936Data] = await Promise.all([
     loadJson<CityScatterData>('cities.json'),
     loadJson<BuildingsData>('buildings.json'),
+    loadJson<StateBuildings1936Data>('state_buildings_1936.json'),
   ]);
+  const stateCitySummary = buildStateCitySummary(citiesData, provinceMapCanvas, store);
   console.log(`[Map] cities.json: ${citiesData.instanceCount} 个城市散布实例`);
   console.log(`[Map] buildings.json: ${buildingsData.count} 个建筑实例`);
+  console.log(`[Map] state_buildings_1936.json: ${stateBuildings1936Data.stateCount} 个州`);
 
   const sampleHeight = createHeightSampler(heightmapCanvas, provincesImg.width, provincesImg.height);
   const sampleProvinceColor = createProvinceColorSampler(provinceMapCanvas);
@@ -1445,8 +1468,47 @@ async function main() {
     strategicRegionLutCanvas
   );
 
-  // ===== UI =====
+  // ===== UI & Game State =====
   const ui = new UIManager(store);
+  ui.setStateBuildingLevels(stateBuildings1936Data.byState);
+  ui.setStateCitySummary(stateCitySummary);
+
+  // 初始化前端菜单和游戏状态机（默认给个 GER，稍后根据玩家选择更新）
+  const gameState = new GameStateManager('GER');
+  ui.setCountryPoliticalInfoProvider((countryTag) => {
+    const details = gameState.getCountryDetails(countryTag);
+    return {
+      name: details.name,
+      leader: details.leader,
+      ideology: details.ideology,
+      party: details.party,
+    };
+  });
+
+  const mainMenu = new MainMenuManager();
+  mainMenu.getCountryDetails = (countryTag) => {
+    const details = gameState.getCountryDetails(countryTag);
+    return {
+      name: details.name,
+      leader: details.leader,
+      ideology: details.ideology,
+      history: details.history,
+    };
+  };
+  
+  // 当玩家在前端完成开局设置并点击“开始”时
+  mainMenu.onGameStart = (setupData) => {
+    console.log(`[Map] 游戏正式开始! 剧本: ${setupData.year}, 国家: ${setupData.countryTag}`);
+    gameState.setCurrentCountryTag(setupData.countryTag);
+    // 如果选择的剧本不同，可在这里扩展修改起始时间的逻辑
+    
+    // 拉近相机到选中国家的首都或大致位置
+    // TODO: 这里可以查 store 找出该国家的首府坐标，现在演示平滑拉近
+    // 简单的拉近效果：
+    const targetZ = camera.position.z * 0.4;
+    const targetY = camera.position.y * 0.4;
+    camera.position.set(camera.position.x, targetY, targetZ);
+  };
 
   let lastMouseX = 0;
   let lastMouseY = 0;
@@ -1472,12 +1534,6 @@ async function main() {
   ui.onMapModeChange = (mode) => {
     terrainManager.setMapMode(mode);
   };
-  ui.setCurrentMapModeLabel(0);
-  ui.updateRuntimeHud(
-    simulationClock.getTick(),
-    simulationClock.getElapsedSimulationSeconds(),
-    simulationClock.getFixedStepSeconds(),
-  );
 
   ui.onCityScatterVisibilityChange = (visible) => {
     cityScatterGroup.visible = visible;
@@ -1506,6 +1562,17 @@ async function main() {
   let mouseDownPos = { x: 0, y: 0 };
   let isDragging = false;
   let mouseDownPickBlocked = false;
+  let isMouseOverUI = false;
+  let isMenuActive = true;
+
+  // 检查鼠标是否在 UI 面板上
+  const checkMouseOverUI = (target: HTMLElement) => {
+    return !!target.closest('#front-end-overlay') ||
+           !!target.closest('#province-panel') ||
+           !!target.closest('#map-mode-panel') ||
+           !!target.closest('#top-bar-container') ||
+           !!target.closest('#political-panel');
+  };
 
   window.addEventListener('mousedown', (e) => {
     mouseDownPos.x = e.clientX;
@@ -1513,18 +1580,56 @@ async function main() {
     isDragging = false;
 
     const target = e.target as HTMLElement;
-    mouseDownPickBlocked =
-      !!target.closest('#province-panel') ||
-      !!target.closest('#map-mode-bar') ||
-      !!target.closest('#layer-toggles') ||
-      !!target.closest('#hud-top-bar') ||
-      !!target.closest('#hud-bottom-strip');
+    mouseDownPickBlocked = checkMouseOverUI(target);
+  });
+
+  // 政治面板交互
+  const flagArea = document.getElementById('flag-area');
+  const btnPolitical = document.getElementById('btn-political');
+  const politicalPanel = document.getElementById('political-panel');
+
+  const togglePoliticalPanel = () => {
+    if (politicalPanel) {
+      const willOpen = !politicalPanel.classList.contains('visible');
+      if (willOpen) {
+        gameState.collapsePoliticalSelectorPanel();
+      }
+      politicalPanel.classList.toggle('visible');
+      if (willOpen) {
+        requestAnimationFrame(() => gameState.syncPoliticalOverviewLayout());
+      }
+    }
+  };
+
+  if (flagArea) {
+    flagArea.addEventListener('click', togglePoliticalPanel);
+  }
+  if (btnPolitical) {
+    btnPolitical.addEventListener('click', togglePoliticalPanel);
+  }
+
+  window.addEventListener('resize', () => {
+    if (politicalPanel?.classList.contains('visible')) {
+      gameState.syncPoliticalOverviewLayout();
+    }
   });
 
   window.addEventListener('mousemove', (e) => {
     lastMouseX = e.clientX;
     lastMouseY = e.clientY;
-    picker.updateMouse(e.clientX, e.clientY);
+    
+    const target = e.target as HTMLElement;
+    isMouseOverUI = checkMouseOverUI(target);
+
+    // 如果鼠标在 UI 上，不更新拾取器的鼠标位置，并强制清除悬停状态
+    if (isMouseOverUI) {
+      picker.updateMouse(-1000, -1000); // 移出屏幕外
+      ui.hideTooltip();
+      document.body.style.cursor = 'default';
+    } else {
+      picker.updateMouse(e.clientX, e.clientY);
+    }
+    
     mouseDirty = true;
 
     // 检查是否拖拽
@@ -1537,7 +1642,7 @@ async function main() {
 
   window.addEventListener('mouseup', (e) => {
     if (!isDragging && e.button === 0) {
-      if (mouseDownPickBlocked) return;
+      if (mouseDownPickBlocked || isMouseOverUI) return;
 
       // 点击选中以 mousedown 坐标为准，避免左键轻微平移导致落点漂移（陆地小省份更明显）
       const pickX = mouseDownPos.x;
@@ -1573,14 +1678,6 @@ async function main() {
     const timestamp = performance.now();
     const deltaTime = (timestamp - lastFrameTime) / 1000; // 秒
     lastFrameTime = timestamp;
-
-    const runtimeTicks = simulationClock.advance(deltaTime);
-    for (const tickContext of runtimeTicks) {
-      runtimeStore.setTick(tickContext.tick);
-      ownershipSystem.update(runtimeStore, tickContext);
-      stateEconomySystem.update(runtimeStore, tickContext);
-      supplySystem.update(runtimeStore, tickContext);
-    }
 
     // WASD 键盘移动
     if (keysPressed.size > 0) {
@@ -1658,6 +1755,13 @@ async function main() {
     terrainManager.updateCameraPos(camera.position);
     terrainManager.updateTime(elapsed, deltaTime);
 
+    // 更新游戏状态（时间流逝）
+    // 如果主菜单还在激活，时间暂停
+    isMenuActive = document.getElementById('front-end-overlay')?.style.display !== 'none';
+    if (!isMenuActive) {
+      gameState.update(deltaTime);
+    }
+
     // 约每 30 帧评估一次并调整 DPR，避免频繁波动
     const fpsNow = deltaTime > 0 ? 1 / deltaTime : FPS_TARGET;
     dprAccumulator += fpsNow;
@@ -1692,11 +1796,6 @@ async function main() {
     }
 
     ui.updateFPS(timestamp);
-    ui.updateRuntimeHud(
-      simulationClock.getTick(),
-      simulationClock.getElapsedSimulationSeconds(),
-      simulationClock.getFixedStepSeconds(),
-    );
     if (fxaaPass.enabled) {
       composer.render();
     } else {

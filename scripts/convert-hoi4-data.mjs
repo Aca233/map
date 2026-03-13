@@ -9,9 +9,11 @@ import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 import { parseHeaders, decodeDds } from 'dds-parser';
+import { Hoi4Parser } from './hoi4_parser.mjs';
 
 // ===== 配置 =====
-const HOI4_DIR = 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Hearts of Iron IV';
+const DEFAULT_HOI4_DIR = 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Hearts of Iron IV';
+const HOI4_DIR = process.argv[2] || process.env.HOI4_DIR || DEFAULT_HOI4_DIR;
 const MAP_DIR = path.join(HOI4_DIR, 'map');
 const MAP_TERRAIN_DIR = path.join(MAP_DIR, 'terrain');
 const STATES_DIR = path.join(HOI4_DIR, 'history', 'states');
@@ -24,9 +26,50 @@ const CITIES_TXT_FILE = path.join(MAP_DIR, 'cities.txt');
 const BUILDINGS_FILE = path.join(MAP_DIR, 'buildings.txt');
 const TERRAIN_COLORMAP_DDS_FILE = path.join(MAP_TERRAIN_DIR, 'colormap_rgb_cityemissivemask_a.dds');
 const OUTPUT_DIR = path.resolve('public', 'assets');
+const DATA_OUTPUT_DIR = path.join(OUTPUT_DIR, 'data');
+const STATE_BUILDINGS_1936_FILE = path.join(OUTPUT_DIR, 'state_buildings_1936.json');
+
+const BUILDING_UI_TYPE_ALIAS = {
+  naval_base_spawn: 'naval_base',
+};
+
+const BUILDING_UI_ALLOWED_TYPES = new Set([
+  'arms_factory',
+  'industrial_complex',
+  'dockyard',
+  'naval_base',
+  'air_base',
+  'anti_air_building',
+  'radar_station',
+  'fuel_silo',
+  'synthetic_refinery',
+]);
+
+const STATE_BUILDING_LEVEL_ALLOWED_TYPES = new Set([
+  'infrastructure',
+  'industrial_complex',
+  'arms_factory',
+  'air_base',
+  'naval_base',
+  'dockyard',
+  'anti_air_building',
+  'radar_station',
+  'fuel_silo',
+  'synthetic_refinery',
+  'bunker',
+  'coastal_bunker',
+  'naval_supply_hub',
+  'land_facility',
+  'naval_facility',
+  'dam',
+  'dam_mountain',
+]);
 
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+}
+if (!fs.existsSync(DATA_OUTPUT_DIR)) {
+  fs.mkdirSync(DATA_OUTPUT_DIR, { recursive: true });
 }
 
 // ===== HSV → RGB 转换 =====
@@ -62,6 +105,581 @@ function mulberry32(seed) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+function extractNamedBlock(content, blockName) {
+  const startMatch = new RegExp(`${blockName}\\s*=\\s*\\{`).exec(content);
+  if (!startMatch) return null;
+
+  const openBraceIndex = startMatch.index + startMatch[0].lastIndexOf('{');
+  let depth = 0;
+
+  for (let i = openBraceIndex; i < content.length; i++) {
+    if (content[i] === '{') depth++;
+    if (content[i] === '}') {
+      depth--;
+      if (depth === 0) {
+        return content.slice(openBraceIndex + 1, i);
+      }
+    }
+  }
+
+  return null;
+}
+
+function parseStateBuildingsFromHistory(content) {
+  const historyBlock = extractNamedBlock(content, 'history');
+  if (!historyBlock) return {};
+
+  const buildingsBlock = extractNamedBlock(historyBlock, 'buildings');
+  if (!buildingsBlock) return {};
+
+  const totals = {};
+
+  const addAssignments = (blockText) => {
+    const regex = /([a-z_]+)\s*=\s*(\d+)/g;
+    let match;
+    while ((match = regex.exec(blockText)) !== null) {
+      const type = match[1];
+      const value = parseInt(match[2], 10);
+      if (!Number.isFinite(value) || value <= 0) continue;
+      if (!STATE_BUILDING_LEVEL_ALLOWED_TYPES.has(type)) continue;
+      totals[type] = (totals[type] || 0) + value;
+    }
+  };
+
+  const provinceBlockRegex = /\b\d+\s*=\s*\{([\s\S]*?)\}/g;
+  let provinceMatch;
+  while ((provinceMatch = provinceBlockRegex.exec(buildingsBlock)) !== null) {
+    addAssignments(provinceMatch[1]);
+  }
+
+  const topLevelOnly = buildingsBlock.replace(/\b\d+\s*=\s*\{[\s\S]*?\}/g, '');
+  addAssignments(topLevelOnly);
+
+  return totals;
+}
+
+function parseDirectory(dirPath) {
+  const results = {};
+  if (!fs.existsSync(dirPath)) {
+    console.warn(`Warning: Directory not found: ${dirPath}`);
+    return results;
+  }
+
+  const files = fs.readdirSync(dirPath);
+  for (const file of files) {
+    if (!file.endsWith('.txt')) continue;
+
+    const filePath = path.join(dirPath, file);
+    try {
+      const parsed = Hoi4Parser.parseFile(filePath);
+      results[file] = parsed;
+    } catch (e) {
+      console.error(`Error parsing ${file}:`, e.message);
+    }
+  }
+  return results;
+}
+
+function collectLocalizationKeys(value, outSet) {
+  if (typeof value === 'string') {
+    if (/^[A-Za-z0-9_.:-]+$/.test(value)) {
+      outSet.add(value);
+    }
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectLocalizationKeys(item, outSet));
+    return;
+  }
+
+  if (value && typeof value === 'object') {
+    for (const [k, v] of Object.entries(value)) {
+      if (/^[A-Za-z0-9_.:-]+$/.test(k)) {
+        outSet.add(k);
+      }
+      collectLocalizationKeys(v, outSet);
+    }
+  }
+}
+
+function parseLocalisationFile(filePath, outMap) {
+  let content = fs.readFileSync(filePath, 'utf8');
+  if (content.charCodeAt(0) === 0xfeff) {
+    content = content.slice(1);
+  }
+
+  const lines = content.split(/\r?\n/);
+  for (const line of lines) {
+    if (!line || line.trimStart().startsWith('#')) continue;
+    const match = line.match(/^\s*([A-Za-z0-9_.:-]+):\d*\s+"(.*)"\s*(?:#.*)?$/);
+    if (!match) continue;
+
+    const key = match[1];
+    if (outMap[key]) continue;
+
+    outMap[key] = match[2]
+      .replace(/\\"/g, '"')
+      .replace(/\\n/g, ' ')
+      .trim();
+  }
+}
+
+function parseLocalisationDirectories(baseDir, neededKeys) {
+  const all = {};
+  const dirs = [
+    path.join(baseDir, 'localisation/simp_chinese'),
+    path.join(baseDir, 'localisation/english'),
+  ];
+
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+      if (!file.endsWith('.yml')) continue;
+      const filePath = path.join(dir, file);
+      try {
+        parseLocalisationFile(filePath, all);
+      } catch (e) {
+        console.warn(`Warning: failed to parse localisation ${file}: ${e.message}`);
+      }
+    }
+  }
+
+  if (!neededKeys || neededKeys.size === 0) {
+    return all;
+  }
+
+  const selected = new Set(neededKeys);
+  const refRegex = /\$([^$]+)\$/g;
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+    for (const key of Array.from(selected)) {
+      const value = all[key];
+      if (typeof value !== 'string') continue;
+      refRegex.lastIndex = 0;
+      let m;
+      while ((m = refRegex.exec(value)) !== null) {
+        const refKey = String(m[1]).trim();
+        if (refKey && all[refKey] && !selected.has(refKey)) {
+          selected.add(refKey);
+          changed = true;
+        }
+      }
+    }
+  }
+
+  const out = {};
+  for (const key of selected) {
+    if (all[key]) out[key] = all[key];
+  }
+  return out;
+}
+
+function collectIdeaIds(value, outSet) {
+  if (!value || typeof value !== 'object') return;
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectIdeaIds(item, outSet));
+    return;
+  }
+
+  for (const [k, v] of Object.entries(value)) {
+    if (/^[a-z0-9_]+$/i.test(k) && k.includes('_') && typeof v === 'object' && v !== null) {
+      outSet.add(k);
+    }
+    collectIdeaIds(v, outSet);
+  }
+}
+
+function addLocalizationKeyVariants(token, outSet) {
+  if (!token || typeof token !== 'string') return;
+
+  const raw = token.trim();
+  if (!raw) return;
+
+  const variants = new Set();
+  const queue = [];
+  const seenStems = new Set();
+
+  const pushStem = (value) => {
+    const clean = String(value || '').trim().replace(/^mio:/i, '');
+    if (!clean || seenStems.has(clean)) return;
+    seenStems.add(clean);
+    queue.push(clean);
+  };
+
+  pushStem(raw);
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const lower = current.toLowerCase();
+
+    variants.add(current);
+    variants.add(lower);
+    variants.add(`${current}_desc`);
+    variants.add(`${current}_tooltip`);
+    variants.add(`${current}_long`);
+    variants.add(`${current}_name`);
+    variants.add(`${current}_company`);
+    variants.add(`${current}_manufacturer`);
+    variants.add(`${lower}_desc`);
+    variants.add(`${lower}_tooltip`);
+    variants.add(`${lower}_long`);
+    variants.add(`${lower}_name`);
+    variants.add(`${current}_1`);
+    variants.add(`${lower}_1`);
+    variants.add(`${current}_1_desc`);
+    variants.add(`${current}_1_tooltip`);
+    variants.add(`${current}_1_long`);
+    variants.add(`${current}_1_name`);
+    variants.add(`${lower}_1_desc`);
+    variants.add(`${lower}_1_tooltip`);
+    variants.add(`${lower}_1_long`);
+    variants.add(`${lower}_1_name`);
+    variants.add(`${current}_fascist`);
+    variants.add(`${current}_neutral`);
+    variants.add(`${current}_democratic`);
+    variants.add(`${current}_communism`);
+    variants.add(`${lower}_fascist`);
+    variants.add(`${lower}_neutral`);
+    variants.add(`${lower}_democratic`);
+    variants.add(`${lower}_communism`);
+
+    const withoutTag = current.match(/^[A-Z0-9]{3}_(.+)$/);
+    if (withoutTag) pushStem(withoutTag[1]);
+
+    const organizationSuffix = current.match(/^(.*)_organization$/i);
+    if (organizationSuffix) pushStem(organizationSuffix[1]);
+
+    const lifecycleSuffix = current.match(/^(.*)_(?:final|improved)$/i);
+    if (lifecycleSuffix) pushStem(lifecycleSuffix[1]);
+
+    const numericSuffix = current.match(/^(.*)_\d+(?:_\d+)*$/);
+    if (numericSuffix) pushStem(numericSuffix[1]);
+
+    const branchSuffix = current.match(/^(.*)_(?:usa|eng|ger|jap|sov|fra|ita|bra|arg|civ|mil|dock)$/i);
+    if (branchSuffix) pushStem(branchSuffix[1]);
+
+    const dlcSuffix = current.match(/^(.*?)_(?:no_[a-z0-9]+|aat|nsb|bba|mtg|lr|la|tfv|dod|wtt)$/i);
+    if (dlcSuffix) pushStem(dlcSuffix[1]);
+
+    const specialtySuffix = current.match(
+      /^(.*)_(?:artillery|small_arms|infantry|armor|armour|tank|naval|aircraft|fighter|bomber|cas|motorized|mechanized|electronic|electronics)$/i
+    );
+    if (specialtySuffix) pushStem(specialtySuffix[1]);
+  }
+
+  for (const key of variants) {
+    outSet.add(key);
+  }
+}
+
+function shouldExpandLocalizationVariantSeed(token) {
+  if (typeof token !== 'string') return false;
+
+  const clean = token.trim().replace(/^mio:/i, '');
+  if (!clean) return false;
+  if (!/[A-Za-z]/.test(clean)) return false;
+  if (/^\d+(?:\.\d+)*$/.test(clean)) return false;
+  if (!/^[A-Za-z][A-Za-z0-9_.:-]*$/.test(clean)) return false;
+
+  return !/^(?:if|else|else_if|limit|modifier|hidden_effect|available|ai_will_do|set_politics|ruling_party|create_equipment_variant|design_team|recruit_character|complete_national_focus|set_country_flag|clr_country_flag)$/i.test(clean);
+}
+
+function collectLocalizationVariantSeeds(value, outSet) {
+  if (typeof value === 'string') {
+    if (shouldExpandLocalizationVariantSeed(value)) {
+      outSet.add(value);
+    }
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectLocalizationVariantSeeds(item, outSet));
+    return;
+  }
+
+  if (value && typeof value === 'object') {
+    for (const nested of Object.values(value)) {
+      collectLocalizationVariantSeeds(nested, outSet);
+    }
+  }
+}
+
+function collectCharacterIds(value, outSet) {
+  if (!value || typeof value !== 'object') return;
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectCharacterIds(item, outSet));
+    return;
+  }
+
+  for (const [k, v] of Object.entries(value)) {
+    if (/^[A-Z0-9]{3}_[a-z0-9_]+$/i.test(k) && typeof v === 'object' && v !== null) {
+      outSet.add(k);
+    }
+    collectCharacterIds(v, outSet);
+  }
+}
+
+function collectIdeaLawCategories(ideasData) {
+  const result = new Map();
+
+  const groupToCategory = (groupKey) => {
+    if (groupKey === 'economy') return 'economy';
+    if (groupKey === 'trade_laws') return 'trade';
+    if (groupKey === 'mobilization_laws') return 'conscription';
+    if (groupKey === 'tank_manufacturer') return 'industry_tank';
+    if (groupKey === 'naval_manufacturer') return 'industry_naval';
+    if (groupKey === 'aircraft_manufacturer') return 'industry_air';
+    if (groupKey === 'industrial_concern' || groupKey === 'materiel_manufacturer' || groupKey === 'designer') return 'industry_corporation';
+    return null;
+  };
+
+  const walk = (node) => {
+    if (!node || typeof node !== 'object') return;
+
+    if (Array.isArray(node)) {
+      node.forEach(walk);
+      return;
+    }
+
+    for (const [key, value] of Object.entries(node)) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const category = groupToCategory(key);
+        const isLawGroup = category && (
+          value.law === 'yes' ||
+          value.law === true ||
+          value.law === 'y' ||
+          value.designer === 'yes' ||
+          value.designer === true ||
+          key === 'industrial_concern' ||
+          key === 'materiel_manufacturer' ||
+          key === 'tank_manufacturer' ||
+          key === 'naval_manufacturer' ||
+          key === 'aircraft_manufacturer' ||
+          key === 'designer'
+        );
+
+        if (isLawGroup) {
+          for (const [lawId, lawDef] of Object.entries(value)) {
+            if (lawId === 'law' || lawId === 'use_list_view') continue;
+            if (lawDef && typeof lawDef === 'object') {
+              result.set(lawId, category);
+            }
+          }
+        }
+      }
+      walk(value);
+    }
+  };
+
+  walk(ideasData);
+  return result;
+}
+
+function classifyHighCommandAdvisor(advisor, characterId) {
+  const traits = Array.isArray(advisor?.traits)
+    ? advisor.traits.map((t) => String(t).toLowerCase())
+    : [];
+  const token = `${advisor?.idea_token || ''} ${characterId || ''}`.toLowerCase();
+  const haystack = `${traits.join(' ')} ${token}`;
+
+  if (/(navy|naval|submarine|carrier|fleet|destroyer|cruiser)/.test(haystack)) return 'high_command_navy';
+  if (/(air|fighter|bomber|cas|aviation)/.test(haystack)) return 'high_command_air';
+  return 'high_command_army';
+}
+
+function collectCharacterSlotCategories(charactersData) {
+  const result = new Map();
+
+  const slotToCategory = (slot, advisor, characterId) => {
+    const s = String(slot || '').toLowerCase();
+    if (s === 'army_chief') return 'army';
+    if (s === 'navy_chief') return 'navy';
+    if (s === 'air_chief') return 'air';
+    if (s === 'high_command') return classifyHighCommandAdvisor(advisor, characterId);
+    if (s === 'theorist') return 'theorist';
+    if (s === 'political_advisor') return 'political';
+    if (
+      s === 'tank_manufacturer' ||
+      s === 'materiel_manufacturer' ||
+      s === 'industrial_concern' ||
+      s === 'designer'
+    ) {
+      const token = `${advisor?.idea_token || ''} ${characterId || ''}`.toLowerCase();
+      if (/(tank|armor|armour|panzer)/.test(token)) return 'industry_tank';
+      if (/(naval|ship|dock|submarine|carrier|fleet)/.test(token)) return 'industry_naval';
+      if (/(air|aviation|fighter|bomber|cas)/.test(token)) return 'industry_air';
+      return 'industry_corporation';
+    }
+    if (s === 'naval_manufacturer') return 'industry_naval';
+    if (s === 'aircraft_manufacturer') return 'industry_air';
+    return null;
+  };
+
+  const mergeCategory = (characterId, category) => {
+    if (!category) return;
+    const prev = result.get(characterId);
+    if (!prev) {
+      result.set(characterId, category);
+      return;
+    }
+
+    const priority = {
+      industry_tank: 12,
+      industry_naval: 11,
+      industry_air: 10,
+      industry_corporation: 9,
+      high_command_army: 8,
+      high_command_navy: 7,
+      high_command_air: 6,
+      army: 5,
+      navy: 4,
+      air: 3,
+      theorist: 2,
+      political: 2,
+      unknown: 0,
+    };
+
+    if ((priority[category] || 0) > (priority[prev] || 0)) {
+      result.set(characterId, category);
+    }
+  };
+
+  const walk = (node) => {
+    if (!node || typeof node !== 'object') return;
+
+    if (Array.isArray(node)) {
+      node.forEach(walk);
+      return;
+    }
+
+    for (const [key, value] of Object.entries(node)) {
+      if (/^[A-Z0-9]{3}_[a-z0-9_]+$/i.test(key) && value && typeof value === 'object') {
+        const advisors = Array.isArray(value.advisor)
+          ? value.advisor
+          : value.advisor
+            ? [value.advisor]
+            : [];
+
+        for (const advisor of advisors) {
+          if (!advisor || typeof advisor !== 'object') continue;
+          const category = slotToCategory(advisor.slot, advisor, key);
+          mergeCategory(key, category);
+        }
+      }
+      walk(value);
+    }
+  };
+
+  walk(charactersData);
+  return result;
+}
+
+function categorizeIdea(id, ideaCategoryMap) {
+  const fromMap = ideaCategoryMap.get(id);
+  if (fromMap) return fromMap;
+
+  // 严格按 HOI4 数据分组分类：未命中显式分组时，不做关键词猜测
+  return 'spirit';
+}
+
+function categorizeCharacter(id, characterCategoryMap) {
+  const fromMap = characterCategoryMap.get(id);
+  if (fromMap) return fromMap;
+
+  // 严格按角色 slot / 定义分类：未命中时标记为 unknown
+  return 'unknown';
+}
+
+function extractPoliticalHudData() {
+  console.log('[11/10] 正在提取政治与 HUD 数据 ...');
+
+  const countriesData = parseDirectory(path.join(HOI4_DIR, 'common/countries'));
+  const countries = {};
+
+  const tagsFilePath = path.join(HOI4_DIR, 'common/country_tags/00_countries.txt');
+  let tagsMap = {};
+  if (fs.existsSync(tagsFilePath)) {
+    tagsMap = Hoi4Parser.parseFile(tagsFilePath);
+  }
+
+  for (const [tag, fileRef] of Object.entries(tagsMap)) {
+    if (typeof fileRef !== 'string') continue;
+    const fileName = path.basename(fileRef);
+    if (countriesData[fileName]) {
+      countries[tag] = countriesData[fileName];
+    }
+  }
+
+  const historyData = parseDirectory(path.join(HOI4_DIR, 'history/countries'));
+  const startingPolitics = {};
+
+  for (const [fileName, data] of Object.entries(historyData)) {
+    const tagMatch = fileName.match(/^([A-Z]{3})/);
+    if (!tagMatch) continue;
+    const tag = tagMatch[1];
+    startingPolitics[tag] = data;
+  }
+
+  const ideasData = parseDirectory(path.join(HOI4_DIR, 'common/ideas'));
+  const charactersData = parseDirectory(path.join(HOI4_DIR, 'common/characters'));
+
+  const neededLocalizationKeys = new Set();
+  collectLocalizationKeys(startingPolitics, neededLocalizationKeys);
+  collectLocalizationKeys(countries, neededLocalizationKeys);
+
+  const localizationVariantSeeds = new Set();
+  collectLocalizationVariantSeeds(startingPolitics, localizationVariantSeeds);
+  collectLocalizationVariantSeeds(countries, localizationVariantSeeds);
+  for (const token of localizationVariantSeeds) addLocalizationKeyVariants(token, neededLocalizationKeys);
+
+  const ideaIds = new Set();
+  collectIdeaIds(ideasData, ideaIds);
+  for (const id of ideaIds) addLocalizationKeyVariants(id, neededLocalizationKeys);
+
+  const characterIds = new Set();
+  collectCharacterIds(charactersData, characterIds);
+  for (const id of characterIds) addLocalizationKeyVariants(id, neededLocalizationKeys);
+
+  const localization = parseLocalisationDirectories(HOI4_DIR, neededLocalizationKeys);
+
+  const ideaTaxonomy = {};
+  const ideaLawCategoryMap = collectIdeaLawCategories(ideasData);
+  for (const id of ideaIds) {
+    ideaTaxonomy[id] = {
+      category: categorizeIdea(id, ideaLawCategoryMap),
+      name: localization[id] || id,
+    };
+  }
+
+  const characterTaxonomy = {};
+  const characterSlotCategoryMap = collectCharacterSlotCategories(charactersData);
+  for (const id of characterIds) {
+    characterTaxonomy[id] = {
+      category: categorizeCharacter(id, characterSlotCategoryMap),
+      name: localization[id] || id,
+    };
+  }
+
+  fs.writeFileSync(path.join(DATA_OUTPUT_DIR, 'countries.json'), JSON.stringify(countries, null, 2));
+  fs.writeFileSync(path.join(DATA_OUTPUT_DIR, 'starting_politics.json'), JSON.stringify(startingPolitics, null, 2));
+  fs.writeFileSync(path.join(DATA_OUTPUT_DIR, 'localization.json'), JSON.stringify(localization, null, 2));
+  fs.writeFileSync(
+    path.join(DATA_OUTPUT_DIR, 'political_taxonomy.json'),
+    JSON.stringify({ ideas: ideaTaxonomy, characters: characterTaxonomy }, null, 2)
+  );
+
+  console.log(`  countries.json: ${Object.keys(countries).length}`);
+  console.log(`  starting_politics.json: ${Object.keys(startingPolitics).length}`);
+  console.log(`  localization.json: ${Object.keys(localization).length}`);
+  console.log(`  political_taxonomy.json: ideas=${Object.keys(ideaTaxonomy).length}, characters=${Object.keys(characterTaxonomy).length}`);
 }
 
 // ===== 解析 common/countries/colors.txt 中的国家颜色 =====
@@ -797,6 +1415,7 @@ function parseBuildingsData() {
   const lines = fs.readFileSync(BUILDINGS_FILE, 'utf-8').split(/\r?\n/);
   const items = [];
   const typeCounts = {};
+  let skippedByFilter = 0;
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
@@ -806,7 +1425,8 @@ function parseBuildingsData() {
     if (parts.length < 7) continue;
 
     const stateId = parseInt(parts[0], 10);
-    const type = parts[1].trim();
+    const rawType = parts[1].trim();
+    const type = BUILDING_UI_TYPE_ALIAS[rawType] || rawType;
     const x = parseFloat(parts[2]);
     const y = parseFloat(parts[3]);
     const z = parseFloat(parts[4]);
@@ -818,6 +1438,10 @@ function parseBuildingsData() {
 
     if (!Number.isFinite(stateId) || !type) continue;
     if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z) || !Number.isFinite(rotation)) continue;
+    if (!BUILDING_UI_ALLOWED_TYPES.has(type)) {
+      skippedByFilter++;
+      continue;
+    }
 
     items.push({
       stateId,
@@ -834,12 +1458,13 @@ function parseBuildingsData() {
 
   const result = {
     count: items.length,
+    skippedByFilter,
     typeCounts,
     items,
   };
 
   fs.writeFileSync(outputPath, JSON.stringify(result));
-  console.log(`  建筑实例: ${items.length}, 类型数: ${Object.keys(typeCounts).length}`);
+  console.log(`  建筑实例: ${items.length}, 过滤丢弃: ${skippedByFilter}, 类型数: ${Object.keys(typeCounts).length}`);
   console.log(`  ✅ 已保存到 ${outputPath}`);
   return result;
 }
@@ -970,6 +1595,8 @@ function parseStates() {
   const states = {};
   const provinceToOwner = {};
   const provinceToState = {};
+  const stateBuildings1936 = {};
+  const typeLevelTotals = {};
 
   const { strategicRegions, provinceToStrategicRegion } = parseStrategicRegions(strategicRegionNames);
 
@@ -1021,6 +1648,15 @@ function parseStates() {
     const provMatch = content.match(/provinces\s*=\s*\{([^}]+)\}/);
     if (!provMatch) continue;
     const provList = provMatch[1].trim().split(/\s+/).map(Number).filter(n => !isNaN(n) && n > 0);
+
+    const buildingLevels = parseStateBuildingsFromHistory(content);
+    if (Object.keys(buildingLevels).length > 0) {
+      stateBuildings1936[stateId] = buildingLevels;
+      for (const [type, level] of Object.entries(buildingLevels)) {
+        if (!Number.isFinite(level) || level <= 0) continue;
+        typeLevelTotals[type] = (typeLevelTotals[type] || 0) + level;
+      }
+    }
 
     states[stateId] = {
       id: stateId,
@@ -1091,7 +1727,17 @@ function parseStates() {
   console.log(`  颜色来源: colors.txt=${colorSourceStats.fromColors}, 国家文件=${colorSourceStats.fromFile}, 哈希回退=${colorSourceStats.fallback}`);
 
   fs.writeFileSync(outputPath, JSON.stringify(result));
+
+  const stateBuildingsResult = {
+    stateCount: Object.keys(stateBuildings1936).length,
+    typeLevelTotals,
+    byState: stateBuildings1936,
+  };
+  fs.writeFileSync(STATE_BUILDINGS_1936_FILE, JSON.stringify(stateBuildingsResult));
+
+  console.log(`  1936 州建筑数据: ${stateBuildingsResult.stateCount} 个州, 类型数: ${Object.keys(typeLevelTotals).length}`);
   console.log(`  ✅ 已保存到 ${outputPath}`);
+  console.log(`  ✅ 已保存到 ${STATE_BUILDINGS_1936_FILE}`);
 }
 
 function hashCode(str) {
@@ -1117,6 +1763,7 @@ async function main() {
   parseStates();
   const citiesInfo = parseCitiesData();
   const buildingsInfo = parseBuildingsData();
+  extractPoliticalHudData();
 
   console.log(
     `\n==== 完成！heightmap: ${hInfo.width}x${hInfo.height}, provinces: ${pInfo.width}x${pInfo.height}, rivers: ${rInfo.width}x${rInfo.height}, terrain_colormap: ${terrainInfo.width}x${terrainInfo.height}, terrain_water: ${waterInfo.width}x${waterInfo.height}, city_lights: ${cityLightsInfo.width}x${cityLightsInfo.height}, city_instances: ${citiesInfo.instanceCount}, building_instances: ${buildingsInfo.count} ====`

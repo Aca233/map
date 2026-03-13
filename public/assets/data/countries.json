@@ -1,0 +1,2725 @@
+{
+  "GER": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      106,
+      119,
+      89
+    ]
+  },
+  "ENG": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      201,
+      56,
+      93
+    ]
+  },
+  "SOV": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      125,
+      13,
+      24
+    ]
+  },
+  "SWE": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      36,
+      132,
+      247
+    ]
+  },
+  "FRA": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      57,
+      113,
+      228
+    ]
+  },
+  "LUX": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      65,
+      175,
+      179
+    ]
+  },
+  "BEL": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      193,
+      171,
+      8
+    ]
+  },
+  "HOL": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      203,
+      138,
+      74
+    ]
+  },
+  "CZE": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      54,
+      167,
+      156
+    ]
+  },
+  "POL": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      150,
+      23,
+      23
+    ]
+  },
+  "AUS": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      224,
+      228,
+      255
+    ]
+  },
+  "LIT": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      219,
+      219,
+      119
+    ]
+  },
+  "EST": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      76,
+      157,
+      195
+    ]
+  },
+  "LAT": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      112,
+      90,
+      87
+    ]
+  },
+  "SPR": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      242,
+      205,
+      94
+    ]
+  },
+  "ITA": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      67,
+      127,
+      63
+    ]
+  },
+  "ROM": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      235,
+      216,
+      92
+    ]
+  },
+  "YUG": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      72,
+      73,
+      126
+    ]
+  },
+  "SER": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "SWI": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      33,
+      14,
+      19
+    ]
+  },
+  "TUR": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      171,
+      190,
+      152
+    ]
+  },
+  "GRE": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      93,
+      181,
+      227
+    ]
+  },
+  "ALB": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      149,
+      45,
+      102
+    ]
+  },
+  "NOR": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      111,
+      71,
+      71
+    ]
+  },
+  "DEN": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      153,
+      116,
+      93
+    ]
+  },
+  "BUL": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      66,
+      113,
+      69
+    ]
+  },
+  "POR": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      39,
+      116,
+      70
+    ]
+  },
+  "FIN": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      205,
+      212,
+      228
+    ]
+  },
+  "IRE": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      80,
+      159,
+      90
+    ]
+  },
+  "HUN": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      249,
+      126,
+      98
+    ]
+  },
+  "AFG": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      64,
+      160,
+      167
+    ]
+  },
+  "ARG": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      145,
+      157,
+      236
+    ]
+  },
+  "AST": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      57,
+      143,
+      97
+    ]
+  },
+  "BHU": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "BOL": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      255,
+      180,
+      136
+    ]
+  },
+  "BRA": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      76,
+      145,
+      63
+    ]
+  },
+  "CAN": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      233,
+      59,
+      59
+    ]
+  },
+  "CHI": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      40,
+      40,
+      140
+    ]
+  },
+  "CHL": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      155,
+      101,
+      107
+    ]
+  },
+  "COL": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      222,
+      187,
+      91
+    ]
+  },
+  "COS": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "ECU": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      249,
+      146,
+      98
+    ]
+  },
+  "ELS": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "ETH": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "GUA": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "HON": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "IRQ": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      178,
+      114,
+      99
+    ]
+  },
+  "JAP": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      255,
+      191,
+      191
+    ]
+  },
+  "KOR": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      255,
+      240,
+      195
+    ]
+  },
+  "LIB": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "MEX": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      104,
+      152,
+      83
+    ]
+  },
+  "MEN": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      165,
+      102,
+      152
+    ]
+  },
+  "NEP": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "NIC": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "NZL": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "PAN": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "PER": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      71,
+      113,
+      97
+    ]
+  },
+  "PHI": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      40,
+      195
+    ]
+  },
+  "PRU": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      196,
+      189,
+      204
+    ]
+  },
+  "SAF": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "SAU": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      171,
+      190,
+      152
+    ]
+  },
+  "SIA": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      171,
+      190,
+      152
+    ]
+  },
+  "SIK": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      171,
+      190,
+      152
+    ]
+  },
+  "TIB": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      171,
+      190,
+      152
+    ]
+  },
+  "URG": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      171,
+      190,
+      152
+    ]
+  },
+  "VEN": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      171,
+      190,
+      152
+    ]
+  },
+  "YUN": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      171,
+      190,
+      152
+    ]
+  },
+  "USA": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      67,
+      123,
+      237
+    ]
+  },
+  "MON": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      161,
+      190,
+      102
+    ]
+  },
+  "TAN": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "PAR": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      57,
+      113,
+      228
+    ]
+  },
+  "CUB": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "DOM": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "HAI": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "YEM": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      155,
+      101,
+      107
+    ]
+  },
+  "OMA": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      155,
+      101,
+      107
+    ]
+  },
+  "SLO": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      54,
+      167,
+      156
+    ]
+  },
+  "RAJ": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      170,
+      10,
+      10
+    ]
+  },
+  "CRO": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      245,
+      70,
+      70
+    ]
+  },
+  "GXC": {
+    "graphical_culture": "asian_european_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      204,
+      153
+    ]
+  },
+  "PRC": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      82,
+      2,
+      15
+    ]
+  },
+  "SHX": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      9,
+      171,
+      190
+    ]
+  },
+  "XSM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      9,
+      171,
+      190
+    ]
+  },
+  "ICE": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      100,
+      125,
+      175
+    ]
+  },
+  "LEB": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      130,
+      150,
+      60
+    ]
+  },
+  "JOR": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      111,
+      55,
+      78
+    ]
+  },
+  "SYR": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      100,
+      100,
+      150
+    ]
+  },
+  "EGY": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      230,
+      230,
+      70
+    ]
+  },
+  "LBA": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      200,
+      180,
+      90
+    ]
+  },
+  "WGR": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      120,
+      110,
+      89
+    ]
+  },
+  "DDR": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      106,
+      100,
+      95
+    ]
+  },
+  "PAL": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      170,
+      125,
+      80
+    ]
+  },
+  "ISR": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      152,
+      130,
+      191
+    ]
+  },
+  "VIN": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      230,
+      223,
+      50
+    ]
+  },
+  "CAM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      160,
+      71,
+      102
+    ]
+  },
+  "MAL": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      100,
+      96,
+      197
+    ]
+  },
+  "INS": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      128,
+      158,
+      118
+    ]
+  },
+  "LAO": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      30,
+      71,
+      190
+    ]
+  },
+  "MNT": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      171,
+      107,
+      109
+    ]
+  },
+  "UKR": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      255,
+      255,
+      95
+    ]
+  },
+  "GEO": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      255,
+      204,
+      204
+    ]
+  },
+  "KAZ": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      75,
+      184,
+      203
+    ]
+  },
+  "AZR": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      69,
+      151,
+      49
+    ]
+  },
+  "ARM": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      176,
+      102,
+      136
+    ]
+  },
+  "BLR": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      180,
+      220,
+      190
+    ]
+  },
+  "ANG": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": [
+      155,
+      135,
+      195
+    ]
+  },
+  "MZB": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": [
+      255,
+      135,
+      195
+    ]
+  },
+  "ZIM": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      155,
+      255,
+      195
+    ]
+  },
+  "COG": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": [
+      155,
+      135,
+      255
+    ]
+  },
+  "KEN": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      255,
+      57,
+      195
+    ]
+  },
+  "PAK": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      0,
+      102,
+      0
+    ]
+  },
+  "BOT": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      55,
+      235,
+      95
+    ]
+  },
+  "MAN": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      215,
+      172,
+      52
+    ]
+  },
+  "BAH": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "BAN": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "BLZ": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "BRM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "CRC": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": "rgb"
+  },
+  "GDL": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "GYA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "JAM": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "JAN": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      255,
+      255,
+      255
+    ]
+  },
+  "KYR": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "MAD": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "MOL": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "PNG": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "PUE": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": "rgb"
+  },
+  "QAT": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "SCO": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "SRL": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "SUR": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "TAJ": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "TRI": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "TMS": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "UAE": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "UZB": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "KUW": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "CYP": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "MLT": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "ALG": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "MOR": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "TUN": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "SUD": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "ERI": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "DJI": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "SOM": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "UGA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "RWA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "BRD": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "TZN": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "ZAM": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "MLW": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "GAB": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "RCG": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "EQG": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "CMR": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "CAR": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "CHA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "NGA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "DAH": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "TOG": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "GHA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "IVO": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "VOL": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "MLI": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "SIE": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "GNA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "GNB": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "SEN": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "GAM": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "WLS": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "NGR": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "CSA": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      145,
+      163,
+      176
+    ]
+  },
+  "USB": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      167,
+      123,
+      237
+    ]
+  },
+  "MRT": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "NMB": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "WES": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "BAS": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "CAY": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "MLD": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "FIJ": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "FSM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "TAH": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "GUM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "SOL": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "SAM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "HAW": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "SLV": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "BOS": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "HRZ": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "MAC": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "NIR": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "BAY": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      233,
+      231,
+      246
+    ]
+  },
+  "MEK": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      186,
+      245,
+      86
+    ]
+  },
+  "PRE": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      160,
+      160,
+      160
+    ]
+  },
+  "SAX": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      102,
+      102,
+      0
+    ]
+  },
+  "HAN": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      255,
+      0,
+      0
+    ]
+  },
+  "WUR": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      255,
+      204,
+      153
+    ]
+  },
+  "SHL": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      51,
+      51,
+      255
+    ]
+  },
+  "CAT": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": "rgb"
+  },
+  "NAV": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": "rgb"
+  },
+  "GLC": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": "rgb"
+  },
+  "ADU": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "BRI": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": "rgb"
+  },
+  "OCC": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": "rgb"
+  },
+  "COR": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": "rgb"
+  },
+  "KUR": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "TRA": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "DNZ": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": "rgb"
+  },
+  "SIL": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": "rgb"
+  },
+  "KSH": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": "rgb"
+  },
+  "DON": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "KUB": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "BUK": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      204,
+      153,
+      102
+    ]
+  },
+  "ALT": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      204,
+      255,
+      255
+    ]
+  },
+  "KAL": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      255,
+      204,
+      0
+    ]
+  },
+  "KAR": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      0,
+      153,
+      51
+    ]
+  },
+  "CRI": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      255,
+      80,
+      80
+    ]
+  },
+  "TAT": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      255,
+      51,
+      0
+    ]
+  },
+  "CIN": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      0,
+      204,
+      0
+    ]
+  },
+  "DAG": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      0,
+      204,
+      255
+    ]
+  },
+  "BYA": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      64,
+      255
+    ]
+  },
+  "CKK": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      179,
+      179,
+      0
+    ]
+  },
+  "FER": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      179,
+      45,
+      0
+    ]
+  },
+  "YAK": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      255,
+      255
+    ]
+  },
+  "VLA": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      255,
+      204,
+      0
+    ]
+  },
+  "KKP": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      255,
+      128,
+      0
+    ]
+  },
+  "YAM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      204,
+      153,
+      0
+    ]
+  },
+  "TAY": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      102,
+      153
+    ]
+  },
+  "OVO": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      153,
+      51
+    ]
+  },
+  "NEN": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      204,
+      255,
+      204
+    ]
+  },
+  "KOM": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      0,
+      230,
+      184
+    ]
+  },
+  "ABK": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      51,
+      204,
+      51
+    ]
+  },
+  "KBK": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      255,
+      71,
+      26
+    ]
+  },
+  "NOA": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      255,
+      170,
+      0
+    ]
+  },
+  "VGE": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      153,
+      153,
+      153
+    ]
+  },
+  "BSK": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      51,
+      204,
+      51
+    ]
+  },
+  "KHI": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      51,
+      204,
+      255
+    ]
+  },
+  "UDM": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      64,
+      64,
+      64
+    ]
+  },
+  "CHU": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      191,
+      128,
+      64
+    ]
+  },
+  "MEL": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      255,
+      230,
+      230
+    ]
+  },
+  "RIF": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "HAR": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "TIG": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "AFA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "BEG": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "GBA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "SID": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "ORO": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "QEM": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "KHA": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      51,
+      204,
+      51
+    ]
+  },
+  "AOI": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      0,
+      153,
+      51
+    ]
+  },
+  "LBV": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      179,
+      11,
+      0
+    ]
+  },
+  "PAP": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      255,
+      255,
+      204
+    ]
+  },
+  "TOS": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      255,
+      128,
+      128
+    ]
+  },
+  "SPM": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      0,
+      255,
+      255
+    ]
+  },
+  "TTS": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      230,
+      230,
+      0
+    ]
+  },
+  "SMI": {
+    "graphical_culture": "sami_gfx",
+    "graphical_culture_2d": "sami_2d",
+    "color": "rgb"
+  },
+  "GRN": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      255,
+      80,
+      80
+    ]
+  },
+  "RAP": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "YUC": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      255,
+      26,
+      26
+    ]
+  },
+  "RIG": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      0,
+      0,
+      128
+    ]
+  },
+  "QUE": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": [
+      0,
+      102,
+      255
+    ]
+  },
+  "KAT": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": [
+      204,
+      41,
+      0
+    ]
+  },
+  "BIA": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": [
+      0,
+      153,
+      51
+    ]
+  },
+  "WLA": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "CBV": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      0,
+      102,
+      204
+    ]
+  },
+  "BAR": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "EVE": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      153,
+      221,
+      255
+    ]
+  },
+  "SOK": {
+    "graphical_culture": "african_gfx",
+    "graphical_culture_2d": "african_2d",
+    "color": "rgb"
+  },
+  "THU": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      102,
+      153,
+      255
+    ]
+  },
+  "HES": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      255,
+      179,
+      179
+    ]
+  },
+  "RHI": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      0,
+      153,
+      51
+    ]
+  },
+  "UBD": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      92,
+      92,
+      138
+    ]
+  },
+  "KOS": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": "rgb"
+  },
+  "RKB": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKN": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKG": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKU": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKO": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKK": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKT": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKM": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKL": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "GEN": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKH": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKI": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKC": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RGB": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKA": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RNA": {
+    "graphical_culture": "eastern_european_gfx",
+    "graphical_culture_2d": "eastern_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RKV": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RAN": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RCO": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RUS": {
+    "graphical_culture": "western_european_gfx",
+    "graphical_culture_2d": "western_european_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RHD": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RAR": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "ROA": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "RAA": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      115,
+      115,
+      115
+    ]
+  },
+  "GAR": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      128,
+      128,
+      255
+    ]
+  },
+  "INC": {
+    "use_legacy_ai_pp_spend": "yes",
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      255,
+      204,
+      0
+    ]
+  },
+  "MIS": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      255,
+      51,
+      0
+    ]
+  },
+  "MAY": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      255,
+      80,
+      80
+    ]
+  },
+  "INU": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      51,
+      204,
+      204
+    ]
+  },
+  "CHR": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      204,
+      122,
+      0
+    ]
+  },
+  "ITZ": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      204,
+      204,
+      0
+    ]
+  },
+  "NAH": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      51,
+      153,
+      102
+    ]
+  },
+  "IAS": {
+    "graphical_culture": "southamerican_gfx",
+    "graphical_culture_2d": "southamerican_2d",
+    "color": [
+      0,
+      153,
+      51
+    ]
+  },
+  "DIP": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "PSH": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      31,
+      138,
+      31
+    ]
+  },
+  "HYD": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": "rgb"
+  },
+  "MYS": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "RJP": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "CIP": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "RAS": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "NWF": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "KAS": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "MPU": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "WIS": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "KOL": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "KHL": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "SIN": {
+    "graphical_culture": "commonwealth_gfx",
+    "graphical_culture_2d": "commonwealth_2d",
+    "color": "rgb"
+  },
+  "KLT": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      0,
+      171,
+      0
+    ]
+  },
+  "SKK": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      255,
+      245,
+      107
+    ]
+  },
+  "FSA": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      0,
+      179,
+      60
+    ]
+  },
+  "ASY": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      128,
+      0,
+      96
+    ]
+  },
+  "BHR": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": "rgb"
+  },
+  "IMO": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      242,
+      242,
+      242
+    ]
+  },
+  "BLC": {
+    "graphical_culture": "middle_eastern_gfx",
+    "graphical_culture_2d": "middle_eastern_2d",
+    "color": [
+      77,
+      153,
+      0
+    ]
+  },
+  "EZO": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      102,
+      102,
+      153
+    ]
+  },
+  "OKN": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      255,
+      140,
+      26
+    ]
+  },
+  "ANU": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      128,
+      191,
+      255
+    ]
+  },
+  "PLU": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      151,
+      153,
+      255
+    ]
+  },
+  "FOR": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      128,
+      128
+    ]
+  },
+  "TML": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      128,
+      0,
+      0
+    ]
+  },
+  "CHM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      46,
+      46,
+      184
+    ]
+  },
+  "SNG": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      204,
+      0,
+      0
+    ]
+  },
+  "SAR": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      230,
+      184,
+      0
+    ]
+  },
+  "SAB": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      172,
+      230
+    ]
+  },
+  "BRN": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      230,
+      230,
+      0
+    ]
+  },
+  "WPG": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      172,
+      57,
+      57
+    ]
+  },
+  "KUM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      255,
+      230,
+      128
+    ]
+  },
+  "GSM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      105,
+      100,
+      140
+    ]
+  },
+  "GDC": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      45,
+      134,
+      89
+    ]
+  },
+  "KHM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      153,
+      102,
+      51
+    ]
+  },
+  "NXM": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      105,
+      115,
+      145
+    ]
+  },
+  "SND": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      230,
+      92,
+      0
+    ]
+  },
+  "SIC": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      0,
+      96,
+      128
+    ]
+  },
+  "XIC": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      43,
+      92,
+      181
+    ]
+  },
+  "RNG": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      255,
+      191,
+      0
+    ]
+  },
+  "PSR": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      31,
+      31,
+      122
+    ]
+  },
+  "HBC": {
+    "graphical_culture": "asian_gfx",
+    "graphical_culture_2d": "asian_2d",
+    "color": [
+      156,
+      27,
+      22
+    ]
+  }
+}
